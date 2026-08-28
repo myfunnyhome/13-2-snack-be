@@ -1,0 +1,35 @@
+# 의존성
+node_modules/
+
+# 빌드 결과
+dist/
+
+# env files (can opt-in for committing if needed)
+.env
+.env.*
+!.env.example
+
+# Prisma 생성 파일
+src/generated/
+
+# 로그
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+/src/generated/prisma
+
+# AI tools
+.windsurf/
+.claude/
+.agents/
+skills-lock.json
+
+# 테스트 커버리지
+coverage/
