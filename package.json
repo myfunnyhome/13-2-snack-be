@@ -18,17 +18,9 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/myfunnyhome/13-2-snack-be.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/myfunnyhome/13-2-snack-be/issues"
-  },
-  "homepage": "https://github.com/myfunnyhome/13-2-snack-be#readme",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1120.0",
     "@aws-sdk/s3-request-presigner": "^3.1120.0",
@@ -49,6 +41,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
@@ -63,6 +56,7 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.4.2",
+    "prettier": "^3.9.6",
     "prisma": "^7.10.0",
     "ts-jest": "^29.4.12",
     "tsx": "^4.23.12",

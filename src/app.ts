@@ -1,11 +1,11 @@
-import express, { Request, Response, NextFunction } from "express";
+import express, { NextFunction, Request, Response } from 'express';
 
 const app = express();
 
 app.use(express.json());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World");
+app.get('/', (req: Request, res: Response) => {
+  res.send('Hello World');
 });
 
 const PORT = process.env.PORT || 3000;
