@@ -1,8 +1,8 @@
 ---
-name: 'docs: 문서 수정'
+name: "[BE] docs: 문서 수정"
 about: README, API 문서, 컨벤션 등 문서 작업 이슈 템플릿
-title: docs/
-labels: docs
+title: "[BE] docs/"
+labels: BE, docs
 assignees: ''
 
 ---
