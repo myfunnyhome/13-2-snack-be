@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,4 +8,195 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  GENERAL // 일반 유저
+  ADMIN // 관리자
+  SUPER_ADMIN // 최고 관리자
+}
+
+enum OrderStatus {
+  PENDING // 승인 대기
+  APPROVED // 승인 완료
+  REJECTED // 구매 반려 (관리자가 거부)
+  CANCELED // 요청 취소 (유저가 스스로 취소)
+}
+
+model Organization {
+  id            Int      @id @default(autoincrement())
+  name          String
+  bizRegNumber  String   @unique
+  defaultBudget Int      @default(0) // 매달 자동 적용되는 기본 시작 예산
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  users       User[]
+  invitations Invitation[]
+  budgets     Budget[]
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  name           String
+  email          String   @unique
+  role           Role     @default(GENERAL)
+  isActive       Boolean  @default(true) // 소프트 삭제(탈퇴) 처리용
+  organizationId Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization  Organization   @relation(fields: [organizationId], references: [id])
+  account       Account?
+  products      Product[] // 내가 등록한 상품
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orders        Order[]        @relation("Requester") // 내가 요청한 구매
+  handledOrders Order[]        @relation("Handler") // 내가 승인/반려 처리한 구매 (담당자)
+
+  @@index([organizationId])
+}
+
+// 민감 필드(비밀번호, 리프레시 토큰)를 User와 분리한 계정 테이블
+// User와 1:1 확정 관계라 FK(userId)를 PK로 사용함
+model Account {
+  userId       Int      @id
+  password     String
+  refreshToken String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// 초대는 이메일 하나당 1회용 링크로 가정함
+model Invitation {
+  id             String   @id @default(cuid())
+  email          String
+  name           String
+  role           Role
+  organizationId Int
+  used           Boolean  @default(false)
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([email])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  parentId  Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryToCategory")
+  products Product[]
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String
+  price         Int
+  imageUrl      String?
+  productUrl    String?
+  purchaseCount Int      @default(0) // 승인 완료될 때마다 증가
+  isDeleted     Boolean  @default(false) // 소프트 삭제 처리용
+  categoryId    Int
+  createdById   Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  category      Category       @relation(fields: [categoryId], references: [id])
+  createdBy     User           @relation(fields: [createdById], references: [id])
+  cartItems     CartItem[]
+  wishlistItems WishlistItem[]
+  orderItems    OrderItem[]
+
+  @@index([categoryId])
+  @@index([createdById])
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // 같은 유저가 같은 상품 중복 담으면 수량만 늘어나게
+}
+
+model WishlistItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // 같은 상품 중복 찜 방지
+}
+
+// 일반유저 요청 / 관리자 즉시구매 모두 이 모델 하나로 처리한다고 가정함
+// 즉시구매는 생성 시점에 status를 바로 APPROVED로 넣는 방식으로 구분
+model Order {
+  id              Int         @id @default(autoincrement())
+  status          OrderStatus @default(PENDING)
+  totalPrice      Int
+  deliveryFee     Int         @default(3000) // 주문당 고정 배송비
+  requestMessage  String?
+  responseMessage String? // 승인 메시지 / 반려 메시지 공통 필드로 가정함
+  requesterId     Int
+  handlerId       Int?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  requester User        @relation("Requester", fields: [requesterId], references: [id])
+  handler   User?       @relation("Handler", fields: [handlerId], references: [id])
+  items     OrderItem[]
+
+  @@index([requesterId])
+  @@index([status])
+}
+
+model OrderItem {
+  id           Int      @id @default(autoincrement())
+  orderId      Int
+  productId    Int
+  quantity     Int
+  priceAtOrder Int // 주문 당시 가격 스냅샷 (나중에 상품 가격 바뀌어도 과거 내역 안 틀어지게)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+}
+
+// 매달 시작 예산을 레코드로 쌓는 방식, spentAmount는 캐싱 필드
+model Budget {
+  id             Int      @id @default(autoincrement())
+  organizationId Int
+  year           Int
+  month          Int
+  startingBudget Int
+  spentAmount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, year, month])
 }
