@@ -1,3 +1,4 @@
+import type { Role } from '../generated/prisma/client';
 import * as authRepository from '../repositories/auth.repository';
 import type {
   SigninInput,
@@ -21,7 +22,7 @@ type SigninUser = {
   id: number;
   name: string;
   email: string;
-  role: import('../generated/prisma/client').Role;
+  role: Role;
   organizationId: number;
 };
 
