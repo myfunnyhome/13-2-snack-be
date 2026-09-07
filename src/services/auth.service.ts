@@ -124,6 +124,10 @@ export async function refresh(
     throw new UnauthorizedError();
   }
 
+  if (!user.isActive) {
+    throw new UnauthorizedError('비활성화된 계정입니다.');
+  }
+
   if (hashRefreshToken(refreshToken) !== user.account.refreshToken) {
     throw new UnauthorizedError();
   }

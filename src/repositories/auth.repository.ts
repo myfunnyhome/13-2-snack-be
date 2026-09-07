@@ -58,6 +58,7 @@ const findUserWithAccountByIdArgs = {
   select: {
     id: true,
     role: true,
+    isActive: true,
     organizationId: true,
     account: {
       select: {
