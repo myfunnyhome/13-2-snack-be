@@ -24,6 +24,15 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     return next(err);
   }
 
+  // express-jwt 검증 실패 (토큰 없음, 위조, 만료)
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      success: false,
+      message: '로그인이 필요합니다.',
+      code: 'UNAUTHORIZED',
+    });
+  }
+
   // 1) 우리가 만든 커스텀 에러
   // instanceof로 "우리 에러"만 정확히 걸러낸다.
   if (err instanceof AppError) {

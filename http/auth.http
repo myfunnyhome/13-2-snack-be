@@ -1,0 +1,66 @@
+@baseUrl = http://localhost:3001
+
+### 1. 회원가입 (Super Admin)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트관리자",
+  "email": "lucy@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "테스트회사"
+}
+
+### 2. 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin5@test.com",
+  "password": "password123"
+}
+
+### 3. 토큰 갱신 (refreshToken 쿠키 필요)
+POST {{baseUrl}}/auth/refresh-token
+
+### 4. 로그아웃 (accessToken 쿠키 필요)
+POST {{baseUrl}}/auth/signout
+
+### --- 에러 케이스 ---
+
+### 5. 중복 이메일 가입 (409 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "중복유저",
+  "email": "admin@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "중복회사"
+}
+
+### 6. 비밀번호 불일치 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "new@test.com",
+  "password": "password123",
+  "passwordConfirm": "wrongpassword",
+  "organizationName": "테스트회사"
+}
+
+### 7. 잘못된 비밀번호 로그인 (401 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "wrongpassword"
+}
+
+### 8. 쿠키 없이 로그아웃 (401 예상)
+POST {{baseUrl}}/auth/signout
