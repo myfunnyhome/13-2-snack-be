@@ -3,7 +3,10 @@ import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 
 import errorHandler from './middlewares/errorHandler';
+import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
+import meRoutes from './routes/me';
+import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
 
 const app = express();
