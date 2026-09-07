@@ -21,11 +21,17 @@ Content-Type: application/json
   "password": "password123"
 }
 
-### 3. 토큰 갱신 (refreshToken 쿠키 필요)
+### 토큰 갱신
 POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
 
-### 4. 로그아웃 (accessToken 쿠키 필요)
+{
+  "refreshToken": "refreshToken 넣기"
+}
+
+### 4. 로그아웃
 POST {{baseUrl}}/auth/signout
+Authorization: Bearer //accessToken 넣기
 
 ### --- 에러 케이스 ---
 

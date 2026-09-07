@@ -1,4 +1,3 @@
-import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 
@@ -18,7 +17,6 @@ app.use(
   }),
 );
 app.use(express.json());
-app.use(cookieParser());
 
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
 app.use(authRoutes);
