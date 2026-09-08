@@ -1,4 +1,5 @@
 import { ErrorRequestHandler } from 'express';
+import { UnauthorizedError as ExpressJwtUnauthorizedError } from 'express-jwt';
 import { ZodError } from 'zod';
 
 import { AppError } from '../types/errors';
@@ -24,15 +25,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     return next(err);
   }
 
-  // express-jwt 검증 실패 (토큰 없음, 위조, 만료)
-  if (err.name === 'UnauthorizedError') {
-    return res.status(401).json({
-      success: false,
-      message: '로그인이 필요합니다.',
-      code: 'UNAUTHORIZED',
-    });
-  }
-
   // 1) 우리가 만든 커스텀 에러
   // instanceof로 "우리 에러"만 정확히 걸러낸다.
   if (err instanceof AppError) {
@@ -40,6 +32,31 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       success: false,
       message: err.message,
       code: err.code,
+    });
+  }
+
+  // express-jwt 검증 실패 에러 추가
+  if (err instanceof ExpressJwtUnauthorizedError) {
+    const isTokenExpired =
+      err.inner instanceof Error && err.inner.name === 'TokenExpiredError';
+    const isRefreshRequest = req.path === '/auth/refresh-token';
+
+    const message = !isTokenExpired
+      ? '로그인이 필요합니다.'
+      : isRefreshRequest
+        ? '세션이 만료되었습니다. 다시 로그인해주세요.'
+        : '인증 토큰이 만료되었습니다.';
+
+    const code = !isTokenExpired
+      ? 'UNAUTHORIZED'
+      : isRefreshRequest
+        ? 'SESSION_EXPIRED'
+        : 'TOKEN_EXPIRED';
+
+    return res.status(401).json({
+      success: false,
+      message,
+      code,
     });
   }
 

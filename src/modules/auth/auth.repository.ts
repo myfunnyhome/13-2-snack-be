@@ -1,5 +1,5 @@
-import { prisma } from '../config/prisma';
-import { Prisma } from '../generated/prisma/client';
+import { prisma } from '../../config/prisma';
+import { Prisma } from '../../generated/prisma/client';
 
 type CreateSuperAdminParams = {
   name: string;

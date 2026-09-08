@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import * as authController from '../controllers/auth.controller';
+import * as authController from '../modules/auth/auth.controller';
 import {
   authenticate,
   verifyRefreshToken,

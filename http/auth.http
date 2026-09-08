@@ -5,33 +5,44 @@ POST {{baseUrl}}/auth/signup
 Content-Type: application/json
 
 {
-  "name": "테스트관리자",
-  "email": "lucy@test.com",
+  "name": "인액티브관리자",
+  "email": "inactive@test.com",
   "password": "password123",
   "passwordConfirm": "password123",
-  "organizationName": "테스트회사"
+  "organizationName": "인액티브회사"
 }
 
 ### 2. 로그인
+# 응답 Header에서 Set-Cookie: accessToken, refreshToken 확인
 POST {{baseUrl}}/auth/signin
 Content-Type: application/json
 
 {
-  "email": "admin5@test.com",
+  "email": "inactive@test.com",
   "password": "password123"
 }
 
-### 토큰 갱신
+### Auth 테스트 메모
+# 로그인하면 accessToken, refreshToken은 body가 아니라 Set-Cookie로 내려옴
+# accessToken은 15분짜리 JWT이고 refreshToken은 3일짜리 JWT
+# 두 쿠키의 Max-Age는 모두 3일
+# 쿠키 Max-Age는 브라우저가 쿠키를 들고 있는 시간이고
+# JWT exp는 토큰 자체가 유효한 시간임
+
+### JWT payload 확인 방법
+# jwt 사이트에서 진행 iat랑 exp확인
+
+### 3. 토큰 갱신
+# body에 refreshToken을 넣지 않음
+# 로그인 응답에서 저장된 refreshToken 쿠키가 자동으로 전송되어야 함
 POST {{baseUrl}}/auth/refresh-token
 Content-Type: application/json
 
-{
-  "refreshToken": "refreshToken 넣기"
-}
-
 ### 4. 로그아웃
+# Authorization 헤더를 넣지 않음
+# 로그인 응답에서 저장된 accessToken 쿠키가 자동으로 전송되어야 함
 POST {{baseUrl}}/auth/signout
-Authorization: Bearer //accessToken 넣기
+Content-Type: application/json
 
 ### --- 에러 케이스 ---
 
@@ -68,5 +79,34 @@ Content-Type: application/json
   "password": "wrongpassword"
 }
 
-### 8. 쿠키 없이 로그아웃 (401 예상)
+### 8. 쿠키 없이 토큰 갱신 (401 예상)
+# JetBrains HTTP Client라면 저장된 쿠키를 지우고 실행
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### 9. 쿠키 없이 로그아웃 (401 예상)
+# JetBrains HTTP Client라면 저장된 쿠키를 지우고 실행
 POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+
+### 10. 비활성 계정 로그인 (401 / ACCOUNT_INACTIVE 예상)
+# 준비:
+# 1. 먼저 이 이메일로 회원가입을 완료한다.
+# 2. DB에서 해당 User의 isActive를 false로 변경한다.
+# 3. 아래 요청을 실행한다.
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "inactive@test.com",
+  "password": "password123"
+}
+
+### 11. 비활성 계정 토큰 갱신 (401 / ACCOUNT_INACTIVE 예상)
+# 준비:
+# 1. 정상 계정으로 로그인해 accessToken/refreshToken 쿠키를 받는다.
+# 2. DB에서 해당 User의 isActive를 false로 변경한다.
+# 3. 쿠키가 유지된 같은 HTTP Client에서 아래 요청을 실행한다.
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json

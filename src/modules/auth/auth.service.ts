@@ -1,17 +1,17 @@
-import type { Role } from '../generated/prisma/client';
-import * as authRepository from '../repositories/auth.repository';
+import type { Role } from '../../generated/prisma/client';
+import * as authRepository from './auth.repository';
 import type {
   SigninInput,
   SuperAdminSignupInput,
-} from '../schemas/auth.schema';
-import { ConflictError, UnauthorizedError } from '../types/errors';
+} from './auth.schema';
+import { ConflictError, UnauthorizedError } from '../../types/errors';
 import {
   type TokenPayload,
   createAccessToken,
   createRefreshToken,
   hashRefreshToken,
-} from '../utils/authToken';
-import { createPasswordHash, isPasswordMatched } from '../utils/password';
+} from '../../utils/authToken';
+import { createPasswordHash, isPasswordMatched } from '../../utils/password';
 
 type SuperAdminSignupResult = {
   organization: { id: number; name: string };
@@ -87,7 +87,7 @@ export async function signin(data: SigninInput): Promise<SigninResult> {
   }
 
   if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.');
+    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
   }
 
   const tokenPayload: TokenPayload = {
@@ -125,7 +125,7 @@ export async function refresh(
   }
 
   if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.');
+    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
   }
 
   if (hashRefreshToken(refreshToken) !== user.account.refreshToken) {

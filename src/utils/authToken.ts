@@ -31,14 +31,15 @@ function getTokenExpiresIn(
   const expiresIn =
     type === 'access'
       ? (process.env.JWT_ACCESS_EXPIRES_IN ?? '15m')
-      : (process.env.JWT_REFRESH_EXPIRES_IN ?? '7d');
+      : (process.env.JWT_REFRESH_EXPIRES_IN ?? '3d');
 
   return expiresIn as NonNullable<SignOptions['expiresIn']>;
 }
 
 function createToken(payload: TokenPayload, type: TokenType): string {
-  return jwt.sign({ ...payload }, getTokenSecret(type), {
+  return jwt.sign({ ...payload, type }, getTokenSecret(type), {
     expiresIn: getTokenExpiresIn(type),
+    algorithm: 'HS256',
   });
 }
 

@@ -7,12 +7,13 @@ import { ForbiddenError } from '../types/errors';
 export const authenticate = expressjwt({
   secret: process.env.JWT_ACCESS_SECRET!,
   algorithms: ['HS256'],
+  getToken: (req) => req.cookies.accessToken,
 });
 
 export const verifyRefreshToken = expressjwt({
   secret: process.env.JWT_REFRESH_SECRET!,
   algorithms: ['HS256'],
-  getToken: (req) => req.body.refreshToken,
+  getToken: (req) => req.cookies.refreshToken,
 });
 
 export function authorize(...allowedRoles: Role[]) {
