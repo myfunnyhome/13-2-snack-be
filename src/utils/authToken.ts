@@ -4,7 +4,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 
 import { Role } from '../generated/prisma/client';
 
-export type TokenType = 'access' | 'refresh';
+type TokenType = 'access' | 'refresh';
 
 export type TokenPayload = {
   userId: number;

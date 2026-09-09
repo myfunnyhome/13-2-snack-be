@@ -1,0 +1,115 @@
+@baseUrl = http://localhost:3001
+
+### 1. 로그인 - 초대 생성용 SUPER_ADMIN 쿠키 받기
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "lucy0@test.com",
+  "password": "password123"
+}
+
+### 2. 회원 초대 생성 - GENERAL
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "eneral@test.com",
+  "name": "초대일반",
+  "role": "GENERAL"
+}
+
+### 3. 회원 초대 생성 - ADMIN
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "invited-admin@test.com",
+  "name": "초대관리자",
+  "role": "ADMIN"
+}
+
+### 4. 초대 정보 확인
+# 위 초대 생성 응답의 id를 아래에 넣어서 실행
+GET {{baseUrl}}/invitations/cmttka41800018b889z97qcy3
+
+### --- 에러 케이스 ---
+
+### 5. SUPER_ADMIN 초대 시도 (400 예상)
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "invited-super@test.com",
+  "name": "초대최고관리자",
+  "role": "SUPER_ADMIN"
+}
+
+### 6. 잘못된 이메일 형식 (400 예상)
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "wrong-email",
+  "name": "초대회원",
+  "role": "GENERAL"
+}
+
+### 7. 없는 초대 ID 확인 (404 예상)
+GET {{baseUrl}}/invitations/not-exist-id
+
+### 4. 로그아웃
+# Authorization 헤더를 넣지 않음
+# 로그인 응답에서 저장된 accessToken 쿠키가 자동으로 전송되어야 함
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+### 8. 쿠키 없이 초대 생성 (401 예상)
+# 저장된 쿠키를 지우고 실행
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "no-cookie@test.com",
+  "name": "쿠키없음",
+  "role": "GENERAL"
+}
+
+
+### 9. 초대 이메일과 다른 이메일로 회원가입 시도 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationId": "cmttsog720000p9889m8gn3j3",
+  "name": "초대일반",
+  "email": "other@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}
+
+### 10. 초대 기반 회원가입
+# 위 초대 생성 응답의 id를 invitationId에 넣어서 실행
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationId": "cmttsog720000p9889m8gn3j3",
+  "name": "초대관리자",
+  "email": "eneral@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}
+
+### 11. 같은 초대 ID로 재가입 시도 (400 예상)
+# 10번에서 사용한 invitationId를 그대로 다시 넣어서 실행
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationId": "cmttsog720000p9889m8gn3j3",
+  "name": "초대관리자",
+  "email": "eneral@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}

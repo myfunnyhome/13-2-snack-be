@@ -47,7 +47,7 @@ async function main() {
   const organization = await prisma.organization.create({
     data: {
       name: '스낵컴퍼니',
-      bizRegNumber: '123-45-67890',
+      bizRegNumber: '1234567890',
       defaultBudget: 500_000,
     },
   });

@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
-import * as authController from '../modules/auth/auth.controller';
 import {
   authenticate,
   verifyRefreshToken,
 } from '../middlewares/auth.middleware';
+import * as authController from '../modules/auth/auth.controller';
 
 const router = Router();
 

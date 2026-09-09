@@ -1,7 +1,11 @@
 import type { CookieOptions, Request, Response } from 'express';
 import ms, { StringValue } from 'ms';
 
-import { signinSchema, superAdminSignupSchema } from './auth.schema';
+import {
+  invitationSignupSchema,
+  signinSchema,
+  superAdminSignupSchema,
+} from './auth.schema';
 import * as authService from './auth.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -30,9 +34,16 @@ const clearCookieOptions: CookieOptions = {
 };
 
 export async function signup(req: Request, res: Response): Promise<void> {
-  const data = superAdminSignupSchema.parse(req.body);
+  const invitationId = req.body?.invitationId;
 
-  const result = await authService.signupSuperAdmin(data);
+  const result =
+    invitationId !== undefined
+      ? await authService.signupWithInvitation(
+          invitationSignupSchema.parse(req.body),
+        )
+      : await authService.signupSuperAdmin(
+          superAdminSignupSchema.parse(req.body),
+        );
 
   res.status(201).json({
     success: true,

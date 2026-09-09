@@ -1,10 +1,9 @@
 import type { Role } from '../../generated/prisma/client';
-import * as authRepository from './auth.repository';
-import type {
-  SigninInput,
-  SuperAdminSignupInput,
-} from './auth.schema';
-import { ConflictError, UnauthorizedError } from '../../types/errors';
+import {
+  BadRequestError,
+  ConflictError,
+  UnauthorizedError,
+} from '../../types/errors';
 import {
   type TokenPayload,
   createAccessToken,
@@ -12,10 +11,27 @@ import {
   hashRefreshToken,
 } from '../../utils/authToken';
 import { createPasswordHash, isPasswordMatched } from '../../utils/password';
+import * as invitationService from '../invitation/invitation.service';
+import * as authRepository from './auth.repository';
+import type {
+  InvitationSignupInput,
+  SigninInput,
+  SuperAdminSignupInput,
+} from './auth.schema';
 
 type SuperAdminSignupResult = {
   organization: { id: number; name: string };
   user: { id: number; name: string; email: string; role: 'SUPER_ADMIN' };
+};
+
+type InvitationSignupResult = {
+  organization: { id: number; name: string };
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: Role;
+  };
 };
 
 type SigninUser = {
@@ -52,6 +68,7 @@ export async function signupSuperAdmin(
     email: data.email,
     passwordHash,
     organizationName: data.organizationName,
+    bizRegNumber: data.bizRegNumber,
   });
 
   const user = organization.users[0];
@@ -67,6 +84,49 @@ export async function signupSuperAdmin(
       name: user.name,
       email: user.email,
       role: 'SUPER_ADMIN',
+    },
+  };
+}
+
+export async function signupWithInvitation(
+  data: InvitationSignupInput,
+): Promise<InvitationSignupResult> {
+  const invitation = await invitationService.getById(data.invitationId);
+
+  if (invitation.email !== data.email) {
+    throw new BadRequestError(
+      '초대받은 이메일과 가입 이메일이 일치하지 않습니다.',
+    );
+  }
+
+  const existingUser = await authRepository.findUserByEmail(data.email);
+  if (existingUser) {
+    throw new ConflictError('이미 사용 중인 이메일입니다.');
+  }
+
+  const passwordHash = await createPasswordHash(data.password);
+
+  const user = await authRepository.createUserWithInvitation({
+    invitationId: data.invitationId,
+    name: data.name,
+    email: data.email,
+    passwordHash,
+  });
+
+  if (!user) {
+    throw new BadRequestError('이미 사용된 초대입니다.');
+  }
+
+  return {
+    organization: {
+      id: user.organization.id,
+      name: user.organization.name,
+    },
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     },
   };
 }

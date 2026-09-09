@@ -6,6 +6,14 @@ type CreateSuperAdminParams = {
   email: string;
   passwordHash: string;
   organizationName: string;
+  bizRegNumber: string;
+};
+
+type CreateUserWithInvitationParams = {
+  invitationId: string;
+  name: string;
+  email: string;
+  passwordHash: string;
 };
 
 const findUserWithAccountByEmailArgs = {
@@ -45,6 +53,26 @@ type CreateSuperAdminResult = Prisma.OrganizationGetPayload<
   typeof createSuperAdminArgs
 >;
 
+const createUserWithInvitationArgs = {
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    organizationId: true,
+    organization: {
+      select: {
+        id: true,
+        name: true,
+      },
+    },
+  },
+} satisfies Prisma.UserDefaultArgs;
+
+type CreateUserWithInvitationResult = Prisma.UserGetPayload<
+  typeof createUserWithInvitationArgs
+>;
+
 const updateRefreshTokenArgs = {
   select: {
     userId: true,
@@ -81,10 +109,12 @@ export function createSuperAdmin({
   email,
   passwordHash,
   organizationName,
+  bizRegNumber,
 }: CreateSuperAdminParams): Promise<CreateSuperAdminResult> {
   return prisma.organization.create({
     data: {
       name: organizationName,
+      bizRegNumber,
       users: {
         create: {
           name,
@@ -128,5 +158,56 @@ export function findUserWithAccountById(
   return prisma.user.findUnique({
     where: { id: userId },
     select: findUserWithAccountByIdArgs.select,
+  });
+}
+
+export function createUserWithInvitation({
+  invitationId,
+  name,
+  email,
+  passwordHash,
+}: CreateUserWithInvitationParams): Promise<CreateUserWithInvitationResult | null> {
+  return prisma.$transaction(async (tx) => {
+    const invitation = await tx.invitation.findUnique({
+      where: { id: invitationId },
+      select: {
+        id: true,
+        role: true,
+        organizationId: true,
+      },
+    });
+
+    if (!invitation) {
+      return null;
+    }
+
+    const updateResult = await tx.invitation.updateMany({
+      where: {
+        id: invitationId,
+        used: false,
+      },
+      data: { used: true },
+    });
+
+    if (updateResult.count === 0) {
+      return null;
+    }
+
+    const user = await tx.user.create({
+      data: {
+        name,
+        email,
+        role: invitation.role,
+        organizationId: invitation.organizationId,
+        account: {
+          create: {
+            password: passwordHash,
+          },
+        },
+      },
+      select: createUserWithInvitationArgs.select,
+    });
+
+    return user;
   });
 }

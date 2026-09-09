@@ -5,6 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import errorHandler from './middlewares/errorHandler';
 import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
+import invitationsRoutes from './routes/invitations.route';
 import meRoutes from './routes/me';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
@@ -22,10 +23,10 @@ app.use(cookieParser());
 
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
 app.use(authRoutes);
-// app.use(invitationsRoutes);
+app.use(invitationsRoutes);
 // app.use('/me', meRoutes);
 // app.use('/admin', adminRoutes);
-// app.use('/super-admin', superAdminRoutes);
+app.use('/super-admin', superAdminRoutes);
 
 // 매칭되는 라우트가 없는 요청
 // 응답을 직접 만들지 않고 NotFoundError를 넘겨 errorHandler가 처리하게 한다.

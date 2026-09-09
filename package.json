@@ -14,7 +14,8 @@
     "seed": "tsx prisma/seed.ts",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
