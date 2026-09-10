@@ -1,0 +1,156 @@
+@baseUrl = http://localhost:3001
+
+### 1. 회원가입 (Super Admin)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "인액티브관리자",
+  "email": "inactive@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "인액티브회사",
+  "bizRegNumber": "111-22-33344"
+}
+
+### 2. 로그인
+# 응답 Header에서 Set-Cookie: accessToken, refreshToken 확인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "inactive@test.com",
+  "password": "password123"
+}
+
+### Auth 테스트 메모
+# 로그인하면 accessToken, refreshToken은 body가 아니라 Set-Cookie로 내려옴
+# accessToken은 15분짜리 JWT이고 refreshToken은 3일짜리 JWT
+# 두 쿠키의 Max-Age는 모두 3일
+# 쿠키 Max-Age는 브라우저가 쿠키를 들고 있는 시간이고
+# JWT exp는 토큰 자체가 유효한 시간임
+
+### JWT payload 확인 방법
+# jwt 사이트에서 진행 iat랑 exp확인
+
+### 3. 토큰 갱신
+# body에 refreshToken을 넣지 않음
+# 로그인 응답에서 저장된 refreshToken 쿠키가 자동으로 전송되어야 함
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### 4. 로그아웃
+# Authorization 헤더를 넣지 않음
+# 로그인 응답에서 저장된 accessToken 쿠키가 자동으로 전송되어야 함
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+### --- 에러 케이스 ---
+
+### 5. 중복 이메일 가입 (409 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "중복유저",
+  "email": "admin@snack.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "중복회사",
+  "bizRegNumber": "999-88-77766"
+}
+
+### 6. 비밀번호 불일치 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "new@test.com",
+  "password": "password123",
+  "passwordConfirm": "wrongpassword",
+  "organizationName": "테스트회사",
+  "bizRegNumber": "555-44-33322"
+}
+
+### 7. 잘못된 비밀번호 로그인 (401 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@snack.com",
+  "password": "wrongpassword"
+}
+
+### 8. 쿠키 없이 토큰 갱신 (401 예상)
+# 저장된 쿠키를 지우고 실행
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### 9. 쿠키 없이 로그아웃 (401 예상)
+# 저장된 쿠키를 지우고 실행
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+
+### 10. 비활성 계정 로그인 (401 / ACCOUNT_INACTIVE 예상)
+# 준비:
+# 1. 먼저 이 이메일로 회원가입을 완료한다.
+# 2. DB에서 해당 User의 isActive를 false로 변경한다.
+# 3. 아래 요청을 실행한다.
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "inactive@test.com",
+  "password": "password123"
+}
+
+### 11. 비활성 계정 토큰 갱신 (401 / ACCOUNT_INACTIVE 예상)
+# 준비:
+# 1. 정상 계정으로 로그인해 accessToken/refreshToken 쿠키를 받는다.
+# 2. DB에서 해당 User의 isActive를 false로 변경한다.
+# 3. 쿠키가 유지된 같은 HTTP Client에서 아래 요청을 실행한다.
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### --- 사업자번호 ---
+
+### 12. 사업자번호 누락 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "biz1@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "사업자테스트1"
+}
+
+### 13. 사업자번호에 문자 포함 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "biz2@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "사업자테스트2",
+  "bizRegNumber": "12345678ab"
+}
+
+### 14. 사업자번호에 공백 포함 (400 예상)
+# 하이픈은 제거하지만 공백은 제거하지 않음
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "biz3@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "사업자테스트3",
+  "bizRegNumber": "123 45 67890"
+}
