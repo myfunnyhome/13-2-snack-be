@@ -22,8 +22,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
-app.use(authRoutes);
-app.use(invitationsRoutes);
+app.use('/auth', authRoutes);
+app.use('/invitations', invitationsRoutes);
 app.use('/me', meRoutes);
 // app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);

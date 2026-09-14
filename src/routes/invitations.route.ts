@@ -4,6 +4,6 @@ import * as invitationController from '../modules/invitation/invitation.controll
 
 const router = Router();
 
-router.get('/invitations/:id', invitationController.getById);
+router.get('/:token', invitationController.getByToken);
 
 export default router;

@@ -4,16 +4,17 @@ import type { CreateInvitationInput } from './invitation.schema';
 
 type CreateInvitationData = CreateInvitationInput & {
   organizationId: number;
+  token: string;
   expiresAt: Date;
 };
 
-const findByIdArgs = {
+const findByTokenArgs = {
   select: {
     id: true,
     email: true,
     name: true,
     role: true,
-    used: true,
+    usedAt: true,
     expiresAt: true,
     organizationId: true,
     organization: {
@@ -25,8 +26,8 @@ const findByIdArgs = {
   },
 } satisfies Prisma.InvitationDefaultArgs;
 
-export type FindByIdResult = Prisma.InvitationGetPayload<
-  typeof findByIdArgs
+export type FindByTokenResult = Prisma.InvitationGetPayload<
+  typeof findByTokenArgs
 > | null;
 
 const createArgs = {
@@ -35,18 +36,23 @@ const createArgs = {
     email: true,
     name: true,
     role: true,
-    used: true,
+    usedAt: true,
     expiresAt: true,
     organizationId: true,
+    organization: {
+      select: {
+        name: true,
+      },
+    },
   },
 } satisfies Prisma.InvitationDefaultArgs;
 
 export type CreateResult = Prisma.InvitationGetPayload<typeof createArgs>;
 
-export function findById(id: string): Promise<FindByIdResult> {
+export function findByToken(token: string): Promise<FindByTokenResult> {
   return prisma.invitation.findUnique({
-    where: { id },
-    select: findByIdArgs.select,
+    where: { token },
+    select: findByTokenArgs.select,
   });
 }
 
@@ -55,6 +61,7 @@ export function create({
   name,
   role,
   organizationId,
+  token,
   expiresAt,
 }: CreateInvitationData): Promise<CreateResult> {
   return prisma.invitation.create({
@@ -63,6 +70,7 @@ export function create({
       name,
       role,
       organizationId,
+      token,
       expiresAt,
     },
     select: createArgs.select,

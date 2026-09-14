@@ -3,6 +3,8 @@ import ms, { StringValue } from 'ms';
 
 import {
   invitationSignupSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
   signinSchema,
   superAdminSignupSchema,
 } from './auth.schema';
@@ -34,10 +36,10 @@ const clearCookieOptions: CookieOptions = {
 };
 
 export async function signup(req: Request, res: Response): Promise<void> {
-  const invitationId = req.body?.invitationId;
+  const invitationToken = req.body?.invitationToken;
 
   const result =
-    invitationId !== undefined
+    invitationToken !== undefined
       ? await authService.signupWithInvitation(
           invitationSignupSchema.parse(req.body),
         )
@@ -87,4 +89,32 @@ export async function signout(req: Request, res: Response): Promise<void> {
     .clearCookie('refreshToken', clearCookieOptions)
     .status(200)
     .json({ success: true });
+}
+
+export async function requestPasswordReset(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const data = requestPasswordResetSchema.parse(req.body);
+
+  await authService.requestPasswordReset(data);
+
+  res.status(200).json({
+    success: true,
+    message: '해당 이메일로 가입된 계정이 있다면 재설정 링크를 보내드렸습니다.',
+  });
+}
+
+export async function resetPassword(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const data = resetPasswordSchema.parse(req.body);
+
+  await authService.resetPassword(data);
+
+  res.status(200).json({
+    success: true,
+    message: '비밀번호가 변경되었습니다.',
+  });
 }

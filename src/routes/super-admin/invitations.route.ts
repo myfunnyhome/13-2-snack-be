@@ -6,7 +6,7 @@ import * as invitationController from '../../modules/invitation/invitation.contr
 const router = Router();
 
 router.post(
-  '/invitations',
+  '/',
   authenticate,
   authorize('SUPER_ADMIN'),
   invitationController.create,

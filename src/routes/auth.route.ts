@@ -4,17 +4,24 @@ import {
   authenticate,
   verifyRefreshToken,
 } from '../middlewares/auth.middleware';
+import {
+  passwordResetLimiter,
+  signinLimiter,
+  signupRateLimit,
+} from '../middlewares/rateLimiter';
 import * as authController from '../modules/auth/auth.controller';
 
 const router = Router();
 
-router.post('/auth/signup', authController.signup);
-router.post('/auth/signin', authController.signin);
+router.post('/signup', signupRateLimit, authController.signup);
+router.post('/signin', signinLimiter, authController.signin);
+router.post('/refresh-token', verifyRefreshToken, authController.refreshToken);
+router.post('/signout', authenticate, authController.signout);
 router.post(
-  '/auth/refresh-token',
-  verifyRefreshToken,
-  authController.refreshToken,
+  '/password-reset',
+  passwordResetLimiter,
+  authController.requestPasswordReset,
 );
-router.post('/auth/signout', authenticate, authController.signout);
+router.patch('/password-reset', authController.resetPassword);
 
 export default router;

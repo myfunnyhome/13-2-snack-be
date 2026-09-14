@@ -1,5 +1,6 @@
 import { prisma } from '../../config/prisma';
 import { Prisma } from '../../generated/prisma/client';
+import { hashToken } from '../../utils/token';
 
 type CreateSuperAdminParams = {
   name: string;
@@ -10,7 +11,7 @@ type CreateSuperAdminParams = {
 };
 
 type CreateUserWithInvitationParams = {
-  invitationId: string;
+  invitationToken: string;
   name: string;
   email: string;
   passwordHash: string;
@@ -68,7 +69,6 @@ const createUserWithInvitationArgs = {
     },
   },
 } satisfies Prisma.UserDefaultArgs;
-
 type CreateUserWithInvitationResult = Prisma.UserGetPayload<
   typeof createUserWithInvitationArgs
 >;
@@ -98,6 +98,27 @@ const findUserWithAccountByIdArgs = {
 } satisfies Prisma.UserDefaultArgs;
 type FindUserWithAccountByIdResult = Prisma.UserGetPayload<
   typeof findUserWithAccountByIdArgs
+> | null;
+
+const findUserByEmailForResetArgs = {
+  select: {
+    id: true,
+    name: true,
+    email: true,
+    isActive: true,
+  },
+} satisfies Prisma.UserDefaultArgs;
+type FindUserByEmailForResetResult = Prisma.UserGetPayload<
+  typeof findUserByEmailForResetArgs
+> | null;
+
+const findUserByResetTokenArgs = {
+  select: {
+    id: true,
+  },
+} satisfies Prisma.UserDefaultArgs;
+type FindUserByResetTokenResult = Prisma.UserGetPayload<
+  typeof findUserByResetTokenArgs
 > | null;
 
 export function findUserByEmail(email: string) {
@@ -162,34 +183,35 @@ export function findUserWithAccountById(
 }
 
 export function createUserWithInvitation({
-  invitationId,
+  invitationToken,
   name,
   email,
   passwordHash,
 }: CreateUserWithInvitationParams): Promise<CreateUserWithInvitationResult | null> {
+  const hashedToken = hashToken(invitationToken);
+
   return prisma.$transaction(async (tx) => {
+    const updateResult = await tx.invitation.updateMany({
+      where: {
+        token: hashedToken,
+        usedAt: null,
+      },
+      data: { usedAt: new Date() },
+    });
+
+    if (updateResult.count === 0) {
+      return null;
+    }
+
     const invitation = await tx.invitation.findUnique({
-      where: { id: invitationId },
+      where: { token: hashedToken },
       select: {
-        id: true,
         role: true,
         organizationId: true,
       },
     });
 
     if (!invitation) {
-      return null;
-    }
-
-    const updateResult = await tx.invitation.updateMany({
-      where: {
-        id: invitationId,
-        used: false,
-      },
-      data: { used: true },
-    });
-
-    if (updateResult.count === 0) {
       return null;
     }
 
@@ -209,5 +231,63 @@ export function createUserWithInvitation({
     });
 
     return user;
+  });
+}
+
+export function findUserByEmailForReset(
+  email: string,
+): Promise<FindUserByEmailForResetResult> {
+  return prisma.user.findUnique({
+    where: { email },
+    select: findUserByEmailForResetArgs.select,
+  });
+}
+
+export function setResetPasswordToken(
+  userId: number,
+  resetPasswordToken: string | null,
+  resetPasswordTokenExpiresAt: Date | null,
+): Promise<UpdateRefreshTokenResult> {
+  return prisma.account.update({
+    where: { userId },
+    data: { resetPasswordToken, resetPasswordTokenExpiresAt },
+    select: updateRefreshTokenArgs.select,
+  });
+}
+
+export function resetPassword(
+  resetPasswordToken: string,
+  passwordHash: string,
+): Promise<FindUserByResetTokenResult> {
+  const hashedToken = hashToken(resetPasswordToken);
+
+  return prisma.$transaction(async (tx) => {
+    const account = await tx.account.findUnique({
+      where: { resetPasswordToken: hashedToken },
+      select: { userId: true, resetPasswordTokenExpiresAt: true },
+    });
+
+    if (
+      !account ||
+      !account.resetPasswordTokenExpiresAt ||
+      account.resetPasswordTokenExpiresAt < new Date()
+    ) {
+      return null;
+    }
+
+    await tx.account.update({
+      where: { userId: account.userId },
+      data: {
+        password: passwordHash,
+        refreshToken: null,
+        resetPasswordToken: null,
+        resetPasswordTokenExpiresAt: null,
+      },
+    });
+
+    return tx.user.findUnique({
+      where: { id: account.userId },
+      select: findUserByResetTokenArgs.select,
+    });
   });
 }

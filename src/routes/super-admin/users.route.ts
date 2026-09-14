@@ -6,21 +6,21 @@ import * as userController from '../../modules/user/user.controller';
 const router = Router();
 
 router.get(
-  '/users',
+  '/',
   authenticate,
   authorize('SUPER_ADMIN'),
   userController.getUsers,
 );
 
 router.patch(
-  '/users/:id',
+  '/:id',
   authenticate,
   authorize('SUPER_ADMIN'),
   userController.changeUserRole,
 );
 
 router.delete(
-  '/users/:id',
+  '/:id',
   authenticate,
   authorize('SUPER_ADMIN'),
   userController.softDeleteUser,

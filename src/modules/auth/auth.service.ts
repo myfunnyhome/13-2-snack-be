@@ -10,14 +10,20 @@ import {
   createRefreshToken,
   hashRefreshToken,
 } from '../../utils/authToken';
+import { sendPasswordResetEmail } from '../../utils/mailer';
 import { createPasswordHash, isPasswordMatched } from '../../utils/password';
+import { generateToken, hashToken } from '../../utils/token';
 import * as invitationService from '../invitation/invitation.service';
 import * as authRepository from './auth.repository';
 import type {
   InvitationSignupInput,
+  RequestPasswordResetInput,
+  ResetPasswordInput,
   SigninInput,
   SuperAdminSignupInput,
 } from './auth.schema';
+
+const RESET_PASSWORD_EXPIRES_IN_MINUTES = 30;
 
 type SuperAdminSignupResult = {
   organization: { id: number; name: string };
@@ -91,7 +97,7 @@ export async function signupSuperAdmin(
 export async function signupWithInvitation(
   data: InvitationSignupInput,
 ): Promise<InvitationSignupResult> {
-  const invitation = await invitationService.getById(data.invitationId);
+  const invitation = await invitationService.getByToken(data.invitationToken);
 
   if (invitation.email !== data.email) {
     throw new BadRequestError(
@@ -107,14 +113,14 @@ export async function signupWithInvitation(
   const passwordHash = await createPasswordHash(data.password);
 
   const user = await authRepository.createUserWithInvitation({
-    invitationId: data.invitationId,
+    invitationToken: data.invitationToken,
     name: data.name,
     email: data.email,
     passwordHash,
   });
 
   if (!user) {
-    throw new BadRequestError('이미 사용된 초대입니다.');
+    throw new ConflictError('이미 사용된 초대입니다.');
   }
 
   return {
@@ -211,4 +217,43 @@ export async function refresh(
 
 export async function signout(userId: number): Promise<void> {
   await authRepository.updateRefreshToken(userId, null);
+}
+
+export async function requestPasswordReset(
+  data: RequestPasswordResetInput,
+): Promise<void> {
+  const user = await authRepository.findUserByEmailForReset(data.email);
+
+  if (!user || !user.isActive) {
+    return;
+  }
+
+  const token = generateToken();
+  const hashedToken = hashToken(token);
+
+  const expiresAt = new Date();
+  expiresAt.setMinutes(
+    expiresAt.getMinutes() + RESET_PASSWORD_EXPIRES_IN_MINUTES,
+  );
+
+  await sendPasswordResetEmail({
+    to: user.email,
+    name: user.name,
+    token,
+  });
+
+  await authRepository.setResetPasswordToken(user.id, hashedToken, expiresAt);
+}
+
+export async function resetPassword(data: ResetPasswordInput): Promise<void> {
+  const passwordHash = await createPasswordHash(data.password);
+
+  const user = await authRepository.resetPassword(
+    data.resetPasswordToken,
+    passwordHash,
+  );
+
+  if (!user) {
+    throw new BadRequestError('유효하지 않거나 만료된 토큰입니다.');
+  }
 }

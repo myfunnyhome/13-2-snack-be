@@ -54,9 +54,9 @@ export type SuperAdminSignupInput = z.infer<typeof superAdminSignupSchema>;
 export const invitationSignupSchema = z
   .object(
     {
-      invitationId: z
-        .string({ error: '초대 ID는 필수 값입니다.' })
-        .min(1, { error: '초대 ID는 필수 값입니다.' }),
+      invitationToken: z
+        .string({ error: '초대 토큰은 필수 값입니다.' })
+        .min(1, { error: '초대 토큰은 필수 값입니다.' }),
 
       name: z
         .string({ error: '이름은 필수 값입니다.' })
@@ -109,3 +109,48 @@ export const signinSchema = z.object(
 );
 
 export type SigninInput = z.infer<typeof signinSchema>;
+
+export const requestPasswordResetSchema = z.object(
+  {
+    email: z
+      .string({ error: '이메일은 필수 값입니다.' })
+      .trim()
+      .toLowerCase()
+      .pipe(z.email({ error: '올바른 이메일 형식이 아닙니다.' })),
+  },
+  {
+    error: '요청 본문이 올바르지 않습니다.',
+  },
+);
+
+export type RequestPasswordResetInput = z.infer<
+  typeof requestPasswordResetSchema
+>;
+
+export const resetPasswordSchema = z
+  .object(
+    {
+      resetPasswordToken: z
+        .string({ error: '재설정 토큰은 필수 값입니다.' })
+        .min(1, { error: '재설정 토큰은 필수 값입니다.' }),
+
+      password: z
+        .string({ error: '비밀번호는 필수 값입니다.' })
+        .trim()
+        .min(8, { error: '비밀번호는 8자 이상이어야 합니다.' })
+        .max(64, { error: '비밀번호는 64자 이하여야 합니다.' }),
+
+      passwordConfirm: z
+        .string({ error: '비밀번호 확인은 필수 값입니다.' })
+        .trim(),
+    },
+    {
+      error: '요청 본문이 올바르지 않습니다.',
+    },
+  )
+  .refine((data) => data.password === data.passwordConfirm, {
+    error: '비밀번호가 일치하지 않습니다.',
+    path: ['passwordConfirm'],
+  });
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

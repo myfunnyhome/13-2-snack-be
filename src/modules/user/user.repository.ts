@@ -32,6 +32,46 @@ export type FindTargetResult = Prisma.UserGetPayload<
   typeof findTargetArgs
 > | null;
 
+const findProfileByIdArgs = {
+  select: {
+    name: true,
+    email: true,
+    role: true,
+    isActive: true,
+    organization: {
+      select: {
+        name: true,
+      },
+    },
+  },
+} satisfies Prisma.UserDefaultArgs;
+
+export type FindProfileByIdResult = Prisma.UserGetPayload<
+  typeof findProfileByIdArgs
+> | null;
+
+const findInviterInfoArgs = {
+  select: {
+    name: true,
+    organization: {
+      select: {
+        name: true,
+      },
+    },
+  },
+} satisfies Prisma.UserDefaultArgs;
+
+export type FindInviterInfoResult = Prisma.UserGetPayload<
+  typeof findInviterInfoArgs
+> | null;
+
+type UpdateProfileParams = {
+  userId: number;
+  organizationId: number;
+  passwordHash?: string;
+  organizationName?: string;
+};
+
 function buildWhere(organizationId: number, keyword?: string) {
   return {
     organizationId,
@@ -88,5 +128,51 @@ export function deactivate(userId: number): Promise<UserListItem> {
       data: { isActive: false },
       select: userListArgs.select,
     });
+  });
+}
+
+export function findProfileById(
+  userId: number,
+): Promise<FindProfileByIdResult> {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: findProfileByIdArgs.select,
+  });
+}
+
+export function updateProfile({
+  userId,
+  organizationId,
+  passwordHash,
+  organizationName,
+}: UpdateProfileParams): Promise<FindProfileByIdResult> {
+  return prisma.$transaction(async (tx) => {
+    if (passwordHash !== undefined) {
+      await tx.account.update({
+        where: { userId },
+        data: { password: passwordHash },
+      });
+    }
+
+    if (organizationName !== undefined) {
+      await tx.organization.update({
+        where: { id: organizationId },
+        data: { name: organizationName },
+      });
+    }
+
+    return await tx.user.findUnique({
+      where: { id: userId },
+      select: findProfileByIdArgs.select,
+    });
+  });
+}
+
+export function findInviterInfo(
+  userId: number,
+): Promise<FindInviterInfoResult> {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: findInviterInfoArgs.select,
   });
 }

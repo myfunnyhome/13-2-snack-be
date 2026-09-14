@@ -5,7 +5,7 @@ import usersRoutes from './users.route';
 
 const router = Router();
 
-router.use(invitationsRoutes);
-router.use(usersRoutes);
+router.use('/invitations', invitationsRoutes);
+router.use('/users', usersRoutes);
 
 export default router;

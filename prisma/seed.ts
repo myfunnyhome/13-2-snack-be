@@ -8,6 +8,7 @@ import {
   PrismaClient,
   Role,
 } from '../src/generated/prisma/client';
+import { hashToken } from '../src/utils/token';
 
 const DELIVERY_FEE = 3000;
 const DEMO_PASSWORD = 'Password123!';
@@ -34,6 +35,21 @@ async function clearDatabase() {
   await prisma.budget.deleteMany();
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();
+
+  // 시드를 반복 실행해도 항상 id가 1부터 시작하도록 시퀀스 리셋
+  // (auto-increment 시퀀스는 deleteMany로 지워지지 않고 계속 누적됨)
+  await prisma.$executeRawUnsafe(`
+    ALTER SEQUENCE "Organization_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "User_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Product_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Category_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "CartItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "WishlistItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Order_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "OrderItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Budget_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Invitation_id_seq" RESTART WITH 1;
+  `);
 }
 
 async function main() {
@@ -100,7 +116,8 @@ async function main() {
         name: '정초대',
         role: Role.GENERAL,
         organizationId: organization.id,
-        used: false,
+        token: hashToken('seed-token-invite'),
+        usedAt: null,
         expiresAt: inSevenDays,
       },
       {
@@ -108,7 +125,8 @@ async function main() {
         name: '강만료',
         role: Role.ADMIN,
         organizationId: organization.id,
-        used: false,
+        token: hashToken('seed-token-expired'),
+        usedAt: null,
         expiresAt: yesterday,
       },
       {
@@ -116,7 +134,8 @@ async function main() {
         name: '오사용',
         role: Role.GENERAL,
         organizationId: organization.id,
-        used: true,
+        token: hashToken('seed-token-used'),
+        usedAt: yesterday,
         expiresAt: inSevenDays,
       },
     ],
@@ -284,7 +303,8 @@ async function main() {
       name: `신규${i + 1}`,
       role: Role.GENERAL,
       organizationId: organization.id,
-      used: i % 3 === 0,
+      token: hashToken(`seed-token-newhire${String(i + 1).padStart(2, '0')}`),
+      usedAt: i % 3 === 0 ? yesterday : null,
       expiresAt: i % 4 === 0 ? yesterday : inSevenDays,
     })),
   });
@@ -519,6 +539,9 @@ async function main() {
   console.log(`  SUPER_ADMIN  ${superAdmin.email}`);
   console.log(`  ADMIN        ${admin.email}`);
   console.log(`  GENERAL      ${user.email}`);
+  console.log(
+    'Test invitation token: seed-token-invite (email: invite@snack.com)',
+  );
 }
 
 main()

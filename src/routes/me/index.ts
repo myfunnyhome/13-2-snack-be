@@ -5,7 +5,7 @@ import userRoutes from './user.route';
 
 const router = Router();
 
-router.use(userRoutes);
-router.use(profileRoutes);
+router.use('/', userRoutes);
+router.use('/profile', profileRoutes);
 
 export default router;

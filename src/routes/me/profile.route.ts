@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
 import { authenticate } from '../../middlewares/auth.middleware';
-import * as meController from '../../modules/me/me.controller';
+import * as userController from '../../modules/user/user.controller';
 
 const router = Router();
 
-router.patch('/profile', authenticate, meController.updateProfile);
+router.patch('/', authenticate, userController.updateProfile);
 
 export default router;

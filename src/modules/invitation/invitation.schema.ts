@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 import { Role } from '../../generated/prisma/client';
 
-export const invitationIdParamsSchema = z.object({
-  id: z.string({ error: '초대 ID가 필요합니다.' }).min(1, {
-    error: '초대 ID가 필요합니다.',
+export const invitationTokenParamsSchema = z.object({
+  token: z.string({ error: '초대 토큰이 필요합니다.' }).min(1, {
+    error: '초대 토큰이 필요합니다.',
   }),
 });
 

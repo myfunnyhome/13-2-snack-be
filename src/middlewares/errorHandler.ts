@@ -2,6 +2,7 @@ import { ErrorRequestHandler } from 'express';
 import { UnauthorizedError as ExpressJwtUnauthorizedError } from 'express-jwt';
 import { ZodError } from 'zod';
 
+import { Prisma } from '../generated/prisma/client';
 import { AppError } from '../types/errors';
 
 /*
@@ -10,13 +11,11 @@ import { AppError } from '../types/errors';
   성공 { success: true, data } / 실패 { success: false, message, code }
 - app.ts에서 라우터·404 핸들러 다음, 항상 마지막에 등록한다.
 @ 주의사항
-- Prisma 에러 분기(P2002 / P2003 / P2025)는 아직 없다.
-  schema.prisma에 모델이 없어 `prisma generate` 전이고,
-  생성물 경로(루트 generated/)는 .gitignore 대상이라
-  이 브랜치를 받은 사람이 컴파일할 수 없다.
-- 스키마가 dev에 머지된 뒤 별도 이슈에서 추가한다.
-  이때 import 경로는 `../../generated/prisma/client`
-  (schema.prisma의 generator output = "../generated/prisma" 기준)
+- Prisma 에러 분기(P2002 / P2025)는 스키마 확정 이후 추가 완료됨.
+  import 경로는 `../generated/prisma/client`
+  (이 파일이 src/middlewares/에 있고, generator output이
+  src/generated/prisma이므로 한 단계만 올라가면 됨)
+- P2003(FK 제약 위반) 등 아직 마주친 적 없는 코드는 필요 시 추가한다.
 */
 
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -71,7 +70,28 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     });
   }
 
-  // 3) 예상 못 한 모든 에러 (최후의 보루)
+  // 3) Prisma에서 던지는 알려진 에러
+  // 대부분 서비스 레이어에서 사전 체크로 걸러지지만, 동시 요청 등으로
+  // 사전 체크와 실제 쿼리 사이에 상태가 바뀌는 극히 드문 경우를 대비한 방어 코드.
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2002') {
+      return res.status(409).json({
+        success: false,
+        message: '이미 사용 중인 값입니다.',
+        code: 'DUPLICATE_VALUE',
+      });
+    }
+
+    if (err.code === 'P2025') {
+      return res.status(404).json({
+        success: false,
+        message: '대상을 찾을 수 없습니다.',
+        code: 'NOT_FOUND',
+      });
+    }
+  }
+
+  // 4) 예상 못 한 모든 에러 (최후의 보루)
   // 상세 원인은 서버 로그에만, 사용자에겐 일반 메시지만 노출
   console.error('Unhandled error:', err);
   return res.status(500).json({
