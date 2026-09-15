@@ -352,6 +352,7 @@ async function main() {
       totalPrice: orderTotal(pendingItemSum),
       deliveryFee: DELIVERY_FEE,
       requestMessage: '사무실 간식으로 부탁드립니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       items: {
         create: [
@@ -377,6 +378,7 @@ async function main() {
       deliveryFee: DELIVERY_FEE,
       requestMessage: '회의용 음료가 필요합니다.',
       responseMessage: '승인합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       handlerId: admin.id,
       items: {
@@ -397,6 +399,7 @@ async function main() {
       totalPrice: orderTotal(instantBuyItemSum),
       deliveryFee: DELIVERY_FEE,
       responseMessage: '관리자 즉시구매',
+      organizationId: organization.id,
       requesterId: admin.id,
       handlerId: admin.id,
       items: {
@@ -418,6 +421,7 @@ async function main() {
       deliveryFee: DELIVERY_FEE,
       requestMessage: '커피 대량 구매 요청합니다.',
       responseMessage: '예산 초과로 반려합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       handlerId: admin.id,
       items: {
@@ -438,6 +442,7 @@ async function main() {
       totalPrice: orderTotal(canceledItemSum),
       deliveryFee: DELIVERY_FEE,
       requestMessage: '잘못 담아서 취소합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       items: {
         create: [
@@ -492,6 +497,7 @@ async function main() {
           : isRejected
             ? '반려합니다.'
             : undefined,
+        organizationId: organization.id,
         requesterId: extraUsers[i].id,
         handlerId: isApproved || isRejected ? admin.id : undefined,
         items: {
