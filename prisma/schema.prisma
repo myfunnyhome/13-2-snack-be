@@ -34,6 +34,7 @@ model Organization {
   users       User[]
   invitations Invitation[]
   budgets     Budget[]
+  products    Product[]
 }
 
 model User {
@@ -104,24 +105,27 @@ model Category {
 }
 
 model Product {
-  id            Int      @id @default(autoincrement())
-  name          String
-  price         Int
-  imageUrl      String?
-  productUrl    String?
-  purchaseCount Int      @default(0) // 승인 완료될 때마다 증가
-  isDeleted     Boolean  @default(false) // 소프트 삭제 처리용
-  categoryId    Int
-  createdById   Int
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  name           String
+  price          Int
+  imageUrl       String?
+  productUrl     String?
+  purchaseCount  Int      @default(0) // 승인 완료될 때마다 증가
+  isDeleted      Boolean  @default(false) // 소프트 삭제 처리용
+  categoryId     Int
+  createdById    Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organizationId Int
 
+  organization  Organization   @relation(fields: [organizationId], references: [id])
   category      Category       @relation(fields: [categoryId], references: [id])
   createdBy     User           @relation(fields: [createdById], references: [id])
   cartItems     CartItem[]
   wishlistItems WishlistItem[]
   orderItems    OrderItem[]
 
+  @@index([organizationId])
   @@index([categoryId])
   @@index([createdById])
 }
