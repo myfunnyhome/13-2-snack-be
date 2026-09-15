@@ -173,6 +173,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/saewookkang',
           categoryId: chip.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -182,6 +183,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/chocopie',
           categoryId: cookie.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -191,6 +193,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/homerunball',
           categoryId: chocolate.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -200,6 +203,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/pepero',
           categoryId: chocolate.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -209,6 +213,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/cola',
           categoryId: soda.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -218,6 +223,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/americano',
           categoryId: coffee.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
     ]);
@@ -229,6 +235,7 @@ async function main() {
       isDeleted: true,
       categoryId: chip.id,
       createdById: admin.id,
+      organizationId: organization.id,
     },
   });
 
@@ -292,6 +299,7 @@ async function main() {
           productUrl: `https://www.example.com/products/${item.slug}`,
           categoryId: extraCategories[index].id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
     ),
