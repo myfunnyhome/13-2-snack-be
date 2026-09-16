@@ -12,9 +12,10 @@ export class AppError extends Error {
   }
 }
 
+// code를 선택적으로 받아 세부 상황(예: MISSING_FIELD 등)을 구분한다.
 export class BadRequestError extends AppError {
-  constructor(message = '잘못된 요청입니다.') {
-    super(message, 400, 'BAD_REQUEST');
+  constructor(message = '잘못된 요청입니다.', code = 'BAD_REQUEST') {
+    super(message, 400, code);
   }
 }
 
@@ -25,23 +26,32 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+// code를 선택적으로 받아 세부 상황을 구분한다.
 export class ForbiddenError extends AppError {
-  constructor(message = '권한이 없습니다.') {
-    super(message, 403, 'FORBIDDEN');
+  constructor(message = '권한이 없습니다.', code = 'FORBIDDEN') {
+    super(message, 403, code);
   }
 }
 
+// code를 선택적으로 받아 세부 상황(예: BUDGET_NOT_FOUND 등)을 구분한다.
 export class NotFoundError extends AppError {
-  constructor(message = '요청한 리소스를 찾을 수 없습니다.') {
-    super(message, 404, 'NOT_FOUND');
+  constructor(
+    message = '요청한 리소스를 찾을 수 없습니다.',
+    code = 'NOT_FOUND',
+  ) {
+    super(message, 404, code);
   }
 }
 
 // 비즈니스 규칙 위반으로 인한 충돌
 // (예산 초과, 이미 처리된 구매 요청, 중복 상품 등록 등)
 // DB 제약 위반(Prisma P2002)과 달리 서비스 레이어에서 직접 던진다.
+// code를 선택적으로 받아 세부 상황(예: BUDGET_EXCEEDED, ORDER_ALREADY_PROCESSED 등)을 구분한다.
 export class ConflictError extends AppError {
-  constructor(message = '요청을 처리할 수 없는 상태입니다.') {
-    super(message, 409, 'CONFLICT');
+  constructor(
+    message = '요청을 처리할 수 없는 상태입니다.',
+    code = 'CONFLICT',
+  ) {
+    super(message, 409, code);
   }
 }

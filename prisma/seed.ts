@@ -8,6 +8,7 @@ import {
   PrismaClient,
   Role,
 } from '../src/generated/prisma/client';
+import { hashToken } from '../src/utils/token';
 
 const DELIVERY_FEE = 3000;
 const DEMO_PASSWORD = 'Password123!';
@@ -34,6 +35,21 @@ async function clearDatabase() {
   await prisma.budget.deleteMany();
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();
+
+  // 시드를 반복 실행해도 항상 id가 1부터 시작하도록 시퀀스 리셋
+  // (auto-increment 시퀀스는 deleteMany로 지워지지 않고 계속 누적됨)
+  await prisma.$executeRawUnsafe(`
+    ALTER SEQUENCE "Organization_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "User_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Product_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Category_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "CartItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "WishlistItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Order_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "OrderItem_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Budget_id_seq" RESTART WITH 1;
+    ALTER SEQUENCE "Invitation_id_seq" RESTART WITH 1;
+  `);
 }
 
 async function main() {
@@ -47,7 +63,7 @@ async function main() {
   const organization = await prisma.organization.create({
     data: {
       name: '스낵컴퍼니',
-      bizRegNumber: '123-45-67890',
+      bizRegNumber: '1234567890',
       defaultBudget: 500_000,
     },
   });
@@ -100,7 +116,8 @@ async function main() {
         name: '정초대',
         role: Role.GENERAL,
         organizationId: organization.id,
-        used: false,
+        token: hashToken('seed-token-invite'),
+        usedAt: null,
         expiresAt: inSevenDays,
       },
       {
@@ -108,7 +125,8 @@ async function main() {
         name: '강만료',
         role: Role.ADMIN,
         organizationId: organization.id,
-        used: false,
+        token: hashToken('seed-token-expired'),
+        usedAt: null,
         expiresAt: yesterday,
       },
       {
@@ -116,7 +134,8 @@ async function main() {
         name: '오사용',
         role: Role.GENERAL,
         organizationId: organization.id,
-        used: true,
+        token: hashToken('seed-token-used'),
+        usedAt: yesterday,
         expiresAt: inSevenDays,
       },
     ],
@@ -154,6 +173,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/saewookkang',
           categoryId: chip.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -163,6 +183,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/chocopie',
           categoryId: cookie.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -172,6 +193,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/homerunball',
           categoryId: chocolate.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -181,6 +203,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/pepero',
           categoryId: chocolate.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -190,6 +213,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/cola',
           categoryId: soda.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
       prisma.product.create({
@@ -199,6 +223,7 @@ async function main() {
           productUrl: 'https://www.example.com/products/americano',
           categoryId: coffee.id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
     ]);
@@ -210,6 +235,7 @@ async function main() {
       isDeleted: true,
       categoryId: chip.id,
       createdById: admin.id,
+      organizationId: organization.id,
     },
   });
 
@@ -273,6 +299,7 @@ async function main() {
           productUrl: `https://www.example.com/products/${item.slug}`,
           categoryId: extraCategories[index].id,
           createdById: admin.id,
+          organizationId: organization.id,
         },
       }),
     ),
@@ -284,7 +311,8 @@ async function main() {
       name: `신규${i + 1}`,
       role: Role.GENERAL,
       organizationId: organization.id,
-      used: i % 3 === 0,
+      token: hashToken(`seed-token-newhire${String(i + 1).padStart(2, '0')}`),
+      usedAt: i % 3 === 0 ? yesterday : null,
       expiresAt: i % 4 === 0 ? yesterday : inSevenDays,
     })),
   });
@@ -324,6 +352,7 @@ async function main() {
       totalPrice: orderTotal(pendingItemSum),
       deliveryFee: DELIVERY_FEE,
       requestMessage: '사무실 간식으로 부탁드립니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       items: {
         create: [
@@ -349,6 +378,7 @@ async function main() {
       deliveryFee: DELIVERY_FEE,
       requestMessage: '회의용 음료가 필요합니다.',
       responseMessage: '승인합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       handlerId: admin.id,
       items: {
@@ -369,6 +399,7 @@ async function main() {
       totalPrice: orderTotal(instantBuyItemSum),
       deliveryFee: DELIVERY_FEE,
       responseMessage: '관리자 즉시구매',
+      organizationId: organization.id,
       requesterId: admin.id,
       handlerId: admin.id,
       items: {
@@ -390,6 +421,7 @@ async function main() {
       deliveryFee: DELIVERY_FEE,
       requestMessage: '커피 대량 구매 요청합니다.',
       responseMessage: '예산 초과로 반려합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       handlerId: admin.id,
       items: {
@@ -410,6 +442,7 @@ async function main() {
       totalPrice: orderTotal(canceledItemSum),
       deliveryFee: DELIVERY_FEE,
       requestMessage: '잘못 담아서 취소합니다.',
+      organizationId: organization.id,
       requesterId: user.id,
       items: {
         create: [
@@ -464,6 +497,7 @@ async function main() {
           : isRejected
             ? '반려합니다.'
             : undefined,
+        organizationId: organization.id,
         requesterId: extraUsers[i].id,
         handlerId: isApproved || isRejected ? admin.id : undefined,
         items: {
@@ -519,6 +553,9 @@ async function main() {
   console.log(`  SUPER_ADMIN  ${superAdmin.email}`);
   console.log(`  ADMIN        ${admin.email}`);
   console.log(`  GENERAL      ${user.email}`);
+  console.log(
+    'Test invitation token: seed-token-invite (email: invite@snack.com)',
+  );
 }
 
 main()
