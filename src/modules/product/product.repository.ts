@@ -17,7 +17,7 @@ type CreateData = {
   categoryId: number;
   createdById: number;
   organizationId: number;
-  // null은 값을 비우는 뜻이다. 수정에서 이미지·링크를 지울 수 있어야 해서 허용한다.
+  // null은 값을 비운다는 뜻이다.
   imageUrl?: string | null;
   productUrl?: string | null;
 };
@@ -64,11 +64,8 @@ export type ProductOwner = Prisma.ProductGetPayload<
   typeof productOwnerArgs
 > | null;
 
-/*
-정렬 기준마다 id를 마지막 키로 덧붙인다.
-정렬 값이 같은 상품이 여러 개일 때 순서가 흔들리면
-페이지를 넘길 때 같은 상품이 또 나오거나 빠질 수 있다.
-*/
+// id를 마지막 정렬 키로 둔다. 정렬 값이 같을 때 순서가 흔들리면
+// 무한 스크롤에서 같은 상품이 중복되거나 누락된다.
 const ORDER_BY: Record<ProductSort, Prisma.ProductOrderByWithRelationInput[]> =
   {
     latest: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -77,10 +74,7 @@ const ORDER_BY: Record<ProductSort, Prisma.ProductOrderByWithRelationInput[]> =
     priceDesc: [{ price: 'desc' }, { id: 'desc' }],
   };
 
-/*
-Product.organizationId(Organization 1:N)로 회사별 상품만 거른다.
-categoryId가 대분류면 그 하위 소분류 상품까지 포함한다.
-*/
+// 회사별로 거르고, categoryId가 대분류면 하위 소분류 상품까지 포함한다.
 function buildWhere({
   organizationId,
   keyword,
@@ -92,7 +86,6 @@ function buildWhere({
   return {
     isDeleted: false,
     organizationId,
-    // mode를 빼면 PostgreSQL이 대소문자를 구분해 'coca'로 'Coca Cola'를 못 찾는다.
     ...(keyword
       ? { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } }
       : {}),
@@ -144,10 +137,7 @@ export function findOwnerById(
   });
 }
 
-/*
-카테고리는 프론트에서 고정 목록으로 관리하기로 해서 별도 API와 모듈이 없다.
-상품 등록·수정 시 존재 여부만 확인하면 되므로 여기에 둔다.
-*/
+// 카테고리는 별도 모듈이 없어 존재 확인만 여기에 둔다. 카테고리 도메인이 생기면 옮긴다.
 export function findCategoryById(
   categoryId: number,
 ): Promise<{ id: number } | null> {

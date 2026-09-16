@@ -12,9 +12,7 @@ import type {
   UpdateProductInput,
 } from './product.schema';
 
-// 컨트롤러가 req.auth를 그대로 넘긴다.
-// 로그인 사용자 식별자는 dev에 머지된 토큰 페이로드 이름(req.auth.userId)에 맞춘다.
-// 팀에서 req.auth.id로 바꾸기로 했으나 아직 적용 전이라, 그때 여기 3곳도 같이 바꾼다.
+// 컨트롤러가 넘기는 req.auth 중 권한 판단에 쓰는 값만 받는다.
 type Requester = {
   userId: number;
   role: Role;
@@ -50,11 +48,8 @@ type DeleteProductParams = {
   requester: Requester;
 };
 
-/*
-카테고리는 Product의 FK다.
-없는 ID가 들어오면 Prisma가 P2003을 던지는데 errorHandler는 P2002·P2025만 처리하고
-P2003은 처리하지 않아 500으로 떨어진다. 여기서 미리 확인해 400으로 내보낸다.
-*/
+// 없는 카테고리 id는 Prisma가 P2003을 던지는데 errorHandler가 처리하지 않아 500이 된다.
+// 사용자 입력 실수이므로 미리 확인해 400으로 내보낸다.
 async function assertCategoryExists(categoryId: number): Promise<void> {
   const category = await productRepository.findCategoryById(categoryId);
 
@@ -145,8 +140,7 @@ export async function createProduct({
     ...data,
     categoryId,
     createdById: requester.userId,
-    // 조직은 요청 body가 아니라 토큰 값으로만 정한다.
-    // body로 받으면 조직 id를 바꿔 보내 다른 회사에 상품을 등록할 수 있다.
+    // 조직은 body로 받지 않는다. 받으면 다른 회사에 상품을 등록할 수 있다.
     organizationId: requester.organizationId,
   });
 }
