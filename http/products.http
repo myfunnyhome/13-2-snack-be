@@ -138,6 +138,14 @@ Content-Type: application/json
 
 { "name": "마이너스과자", "price": -100, "categoryId": {{subCategoryId}} }
 
+### 20-1. 가격 null (400 예상)
+# 프론트 폼이 가격을 비우면 null을 보낸다. 0원으로 저장되면 안 됨
+# "가격은 필수 값입니다."
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": "가격없는과자", "price": null, "categoryId": {{subCategoryId}} }
+
 ### 21. 이미지 URL 형식 오류 (400 예상)
 # "올바른 이미지 URL이 아닙니다."
 POST {{baseUrl}}/products

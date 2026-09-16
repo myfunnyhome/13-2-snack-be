@@ -9,6 +9,15 @@ export const PRODUCT_SORTS = [
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
+// 숫자 변환은 null·빈 문자열·배열을 0으로 만들어 버린다.
+// 값이 없는 것과 0을 구분하려고, 숫자나 빈칸이 아닌 문자열만 통과시킨다.
+function numberInput(value: unknown): unknown {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '') return value;
+
+  return undefined;
+}
+
 // 수정 모달에서 이미지·링크를 지울 수 있어야 해서 null과 빈 문자열도 받고, null로 통일해 저장한다.
 function nullableUrlSchema(message: string) {
   return z
@@ -65,11 +74,14 @@ export const createProductSchema = z.object(
       .max(100, { error: '상품명은 100자 이하여야 합니다.' }),
 
     // 원 단위 정수로 저장한다.
-    price: z.coerce
-      .number({ error: '가격은 필수 값입니다.' })
-      .int({ error: '가격은 정수여야 합니다.' })
-      .min(0, { error: '가격은 0 이상이어야 합니다.' })
-      .max(100_000_000, { error: '가격은 1억 이하여야 합니다.' }),
+    price: z.preprocess(
+      numberInput,
+      z.coerce
+        .number({ error: '가격은 필수 값입니다.' })
+        .int({ error: '가격은 정수여야 합니다.' })
+        .min(0, { error: '가격은 0 이상이어야 합니다.' })
+        .max(100_000_000, { error: '가격은 1억 이하여야 합니다.' }),
+    ),
 
     categoryId: z.coerce
       .number({ error: '카테고리는 필수 값입니다.' })
