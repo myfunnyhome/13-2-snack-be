@@ -35,6 +35,7 @@ model Organization {
   invitations Invitation[]
   budgets     Budget[]
   products    Product[]
+  orders      Order[]
 }
 
 model User {
@@ -166,17 +167,19 @@ model Order {
   deliveryFee     Int         @default(3000) // 주문당 고정 배송비
   requestMessage  String?
   responseMessage String? // 승인 메시지 / 반려 메시지 공통 필드로 가정함
+  organizationId  Int // 요청 시점의 조직, 관리자 필터링/조직 이력 보존용
   requesterId     Int
   handlerId       Int?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
-  requester User        @relation("Requester", fields: [requesterId], references: [id])
-  handler   User?       @relation("Handler", fields: [handlerId], references: [id])
-  items     OrderItem[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  requester    User         @relation("Requester", fields: [requesterId], references: [id])
+  handler      User?        @relation("Handler", fields: [handlerId], references: [id])
+  items        OrderItem[]
 
   @@index([requesterId])
-  @@index([status])
+  @@index([organizationId, status])
 }
 
 model OrderItem {

@@ -1,10 +1,5 @@
 import nodemailer from 'nodemailer';
 
-console.log('GMAIL_USER:', process.env.GMAIL_USER);
-console.log(
-  'GMAIL_APP_PASSWORD length:',
-  process.env.GMAIL_APP_PASSWORD?.length,
-);
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -12,6 +7,16 @@ const transporter = nodemailer.createTransport({
     pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
+
+// 메일 HTML에 유저 입력값(이름, 조직명 등)을 넣기 전 XSS 방지용 이스케이프 처리
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 type SendInvitationEmailParams = {
   to: string;
@@ -35,8 +40,8 @@ export async function sendInvitationEmail({
     to,
     subject: `[${organizationName}] 간식대장(SNACK) 초대가 도착했습니다`,
     html: `
-      <p>안녕하세요, ${name}님.</p>
-      <p>${organizationName}의 ${inviterName}님이 간식대장(SNACK)에 초대했습니다.</p>
+      <p>안녕하세요, ${escapeHtml(name)}님.</p>
+      <p>${escapeHtml(organizationName)}의 ${escapeHtml(inviterName)}님이 간식대장(SNACK)에 초대했습니다.</p>
       <p>아래 링크를 클릭해 가입을 완료해주세요. (7일 이내 유효)</p>
       <p><a href="${inviteUrl}">가입하기</a></p>
     `,
@@ -64,7 +69,7 @@ export async function sendPasswordResetEmail({
     to,
     subject: '[간식대장(SNACK)] 비밀번호 재설정 안내',
     html: `
-      <p>안녕하세요, ${name}님.</p>
+      <p>안녕하세요, ${escapeHtml(name)}님.</p>
       <p>비밀번호 재설정을 요청하셨습니다.</p>
       <p>아래 링크를 클릭해 새 비밀번호를 설정해주세요. (30분 이내 유효)</p>
       <p><a href="${resetUrl}">비밀번호 재설정하기</a></p>
