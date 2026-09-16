@@ -74,6 +74,21 @@ GET {{baseUrl}}/products?sort=priceAsc&limit=20
 ### 10. 정렬 - 높은 가격순 (200 예상)
 GET {{baseUrl}}/products?sort=priceDesc&limit=20
 
+### --- 상품 등록 내역 (내가 등록한 상품) ---
+
+### 10-1. 내가 등록한 상품 목록 (200 예상)
+# 시드 상품은 admin이 등록했으므로 user로 로그인하면 0건이어야 함
+# 14번(상품 등록)을 먼저 실행하면 그 상품만 나와야 함
+GET {{baseUrl}}/me/products
+
+### 10-2. 내 상품 + 검색·정렬 조합 (200 예상)
+# 목록 조건은 GET /products와 동일하게 동작해야 함
+GET {{baseUrl}}/me/products?keyword=테스트&sort=priceAsc&limit=5
+
+### 10-3. 쿠키 없이 내 상품 조회 (401 예상)
+# 34번(로그아웃) 이후에 실행하세요
+GET {{baseUrl}}/me/products
+
 ### --- 상세 ---
 
 ### 11. 상품 상세 (200 예상)

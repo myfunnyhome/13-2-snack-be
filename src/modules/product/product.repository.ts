@@ -4,6 +4,8 @@ import type { ProductSort } from './product.schema';
 
 type FindManyParams = {
   organizationId: number;
+  // 상품 등록 내역(GET /me/products)에서 등록자로 거를 때만 넣는다.
+  createdById?: number;
   keyword?: string;
   categoryId?: number;
   sort: ProductSort;
@@ -77,15 +79,17 @@ const ORDER_BY: Record<ProductSort, Prisma.ProductOrderByWithRelationInput[]> =
 // 회사별로 거르고, categoryId가 대분류면 하위 소분류 상품까지 포함한다.
 function buildWhere({
   organizationId,
+  createdById,
   keyword,
   categoryId,
 }: Pick<
   FindManyParams,
-  'organizationId' | 'keyword' | 'categoryId'
+  'organizationId' | 'createdById' | 'keyword' | 'categoryId'
 >): Prisma.ProductWhereInput {
   return {
     isDeleted: false,
     organizationId,
+    ...(createdById ? { createdById } : {}),
     ...(keyword
       ? { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } }
       : {}),
@@ -97,13 +101,19 @@ function buildWhere({
 
 export function findMany({
   organizationId,
+  createdById,
   keyword,
   categoryId,
   sort,
   skip,
   take,
 }: FindManyParams): Promise<[ProductListItem[], number]> {
-  const where = buildWhere({ organizationId, keyword, categoryId });
+  const where = buildWhere({
+    organizationId,
+    createdById,
+    keyword,
+    categoryId,
+  });
 
   return Promise.all([
     prisma.product.findMany({

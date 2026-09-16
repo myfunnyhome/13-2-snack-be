@@ -22,6 +22,25 @@ export async function getProducts(req: Request, res: Response): Promise<void> {
   });
 }
 
+// 상품 등록 내역 화면용. 목록 조건은 getProducts와 같고 등록자만 본인으로 고정한다.
+export async function getMyProducts(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const query = searchProductsSchema.parse(req.query);
+
+  const result = await productService.searchProducts({
+    ...query,
+    organizationId: req.auth!.organizationId,
+    createdById: req.auth!.userId,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: result,
+  });
+}
+
 export async function getProduct(req: Request, res: Response): Promise<void> {
   const { id } = productIdParamsSchema.parse(req.params);
 

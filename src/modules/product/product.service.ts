@@ -21,6 +21,8 @@ type Requester = {
 
 type SearchProductsParams = SearchProductsInput & {
   organizationId: number;
+  // 상품 등록 내역에서만 넣는다. 없으면 회사 전체 상품을 본다.
+  createdById?: number;
 };
 
 type SearchProductsResult = {
@@ -85,6 +87,7 @@ async function assertCanModify(
 
 export async function searchProducts({
   organizationId,
+  createdById,
   keyword,
   categoryId,
   sort,
@@ -93,6 +96,7 @@ export async function searchProducts({
 }: SearchProductsParams): Promise<SearchProductsResult> {
   const [products, totalCount] = await productRepository.findMany({
     organizationId,
+    createdById,
     keyword,
     categoryId,
     sort,
