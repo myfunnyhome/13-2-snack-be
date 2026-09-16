@@ -7,6 +7,7 @@ import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
 import invitationsRoutes from './routes/invitations.route';
 import meRoutes from './routes/me';
+import productsRoutes from './routes/products.route';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
 
@@ -27,6 +28,7 @@ app.use('/invitations', invitationsRoutes);
 app.use('/me', meRoutes);
 // app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);
+app.use('/products', productsRoutes);
 
 // 매칭되는 라우트가 없는 요청
 // 응답을 직접 만들지 않고 NotFoundError를 넘겨 errorHandler가 처리하게 한다.

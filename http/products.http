@@ -1,0 +1,230 @@
+@baseUrl = http://localhost:3001
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# superadmin@snack.com   SUPER_ADMIN
+# admin@snack.com        ADMIN    (시드 상품 16개를 전부 이 계정이 등록함)
+# user@snack.com         GENERAL
+# staff01@snack.com      GENERAL  (다른 일반 유저로 권한 확인용)
+
+### 주의
+# - 시드를 돌리면 id가 1부터 다시 매겨집니다. 아래 변수는 시드 직후 기준 값입니다.
+#   다만 카테고리·상품은 시드에서 여러 개를 동시에 만들어 순서가 바뀔 수 있으니,
+#   결과가 이상하면 2번·14번 응답을 보고 변수를 바꿔 넣으세요.
+# - 로그인은 같은 IP에서 15분에 5번까지입니다. 이 파일은 로그인을 3번 하므로
+#   전체를 두 번 연달아 돌리면 6번째 로그인에서 429가 납니다.
+# - 시드 회사가 하나뿐이라 "다른 회사 상품은 404"는 시드로 확인할 수 없습니다.
+
+# 2번 응답에서 '과자' 대분류 id (소분류들의 category.parentId)
+@parentCategoryId = 1
+# 2번 응답에서 '초콜릿' 소분류 id (홈런볼·빼빼로의 category.id)
+@subCategoryId = 5
+# 2번 응답에서 admin이 등록한 시드 상품 id (새우깡 등)
+@seedProductId = 1
+# 14번 응답의 data.id (user가 직접 등록한 상품)
+@myProductId = 18
+
+### 1. 로그인 - 일반 유저
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "user@snack.com", "password": "Password123!" }
+
+### --- 목록 ---
+
+### 2. 상품 목록 기본값 (200 예상)
+# sort=latest, page=1, limit=10
+# 삭제된 '단종 과자'는 나오면 안 됨
+# 여기서 위 변수에 넣을 카테고리·상품 id를 확인하세요
+GET {{baseUrl}}/products
+
+### 3. 무한 스크롤 - 첫 페이지 (200 예상)
+# 시드 직후면 totalCount 16, totalPages 4, hasNext true
+GET {{baseUrl}}/products?limit=5&page=1
+
+### 4. 무한 스크롤 - 마지막 페이지 (200 예상)
+# hasNext false 여야 함
+GET {{baseUrl}}/products?limit=5&page=4
+
+### 5. 이름 검색 (200 예상)
+# 초코파이만 나와야 함
+GET {{baseUrl}}/products?keyword=초코
+
+### 6. 소분류 필터 (200 예상)
+# 홈런볼, 빼빼로만 나와야 함
+GET {{baseUrl}}/products?categoryId={{subCategoryId}}
+
+### 7. 대분류 필터 (200 예상)
+# 과자 아래 소분류(칩·쿠키·초콜릿·젤리·사탕 등) 상품이 모두 나와야 함
+# 음료 쪽 상품(콜라·아메리카노 등)은 나오면 안 됨
+GET {{baseUrl}}/products?categoryId={{parentCategoryId}}&limit=20
+
+### 8. 정렬 - 판매량순 (200 예상)
+# purchaseCount 내림차순
+GET {{baseUrl}}/products?sort=popular&limit=20
+
+### 9. 정렬 - 낮은 가격순 (200 예상)
+# 가격이 같은 상품(1500·1800·2000·2500원)은 id 큰 순으로 고정되어야 함
+GET {{baseUrl}}/products?sort=priceAsc&limit=20
+
+### 10. 정렬 - 높은 가격순 (200 예상)
+GET {{baseUrl}}/products?sort=priceDesc&limit=20
+
+### --- 상세 ---
+
+### 11. 상품 상세 (200 예상)
+# productUrl, createdBy(id, name)까지 나와야 함
+GET {{baseUrl}}/products/{{seedProductId}}
+
+### 12. 없는 상품 (404 예상)
+# "상품을 찾을 수 없습니다."
+GET {{baseUrl}}/products/99999
+
+### 13. id가 숫자가 아님 (400 예상)
+# "올바른 상품 ID가 아닙니다."
+GET {{baseUrl}}/products/abc
+
+### --- 등록 ---
+
+### 14. 상품 등록 - 일반 유저 (201 예상)
+# 응답의 data.id 를 맨 위 @myProductId 에 넣으세요
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "포카칩 오리지널",
+  "price": 1700,
+  "categoryId": {{subCategoryId}},
+  "imageUrl": "https://example.com/pocachip.png",
+  "productUrl": "https://example.com/products/pocachip"
+}
+
+### 15. 선택 항목 없이 등록 (201 예상)
+# imageUrl, productUrl은 선택 항목
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": "꼬깔콘", "price": 1500, "categoryId": {{subCategoryId}} }
+
+### --- 검증 에러 ---
+
+### 16. 정렬 조건 오타 (400 예상)
+# "정렬 조건은 latest, popular, priceAsc, priceDesc만 가능합니다."
+GET {{baseUrl}}/products?sort=cheap
+
+### 17. page 0 (400 예상)
+# "page는 1 이상이어야 합니다."
+GET {{baseUrl}}/products?page=0
+
+### 18. limit 초과 (400 예상)
+# "limit은 100 이하여야 합니다."
+GET {{baseUrl}}/products?limit=101
+
+### 19. 상품명 빈 문자열 (400 예상)
+# "상품명은 1자 이상이어야 합니다."
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": "", "price": 1500, "categoryId": {{subCategoryId}} }
+
+### 20. 가격 음수 (400 예상)
+# "가격은 0 이상이어야 합니다."
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": "마이너스과자", "price": -100, "categoryId": {{subCategoryId}} }
+
+### 21. 이미지 URL 형식 오류 (400 예상)
+# "올바른 이미지 URL이 아닙니다."
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{
+  "name": "주소틀린과자",
+  "price": 1500,
+  "categoryId": {{subCategoryId}},
+  "imageUrl": "not-a-url"
+}
+
+### 22. 없는 카테고리 (400 예상)
+# "존재하지 않는 카테고리입니다."
+# code가 VALIDATION_ERROR가 아니라 BAD_REQUEST — 형식은 맞는데 DB에 없는 경우라서
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": "카테고리없는과자", "price": 1500, "categoryId": 99999 }
+
+### 23. 수정할 내용 없음 (400 예상)
+# "수정할 내용이 없습니다."
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{}
+
+### --- 권한: 수정·삭제는 작성자 본인 또는 ADMIN 이상 ---
+
+### 24. 본인 상품 수정 (200 예상)
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{ "price": 1800 }
+
+### 25. 남(admin)이 등록한 상품 수정 시도 (403 예상)
+# "본인이 등록한 상품만 수정하거나 삭제할 수 있습니다."
+PATCH {{baseUrl}}/products/{{seedProductId}}
+Content-Type: application/json
+
+{ "price": 9999 }
+
+### 26. 로그인 - 다른 일반 유저
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "staff01@snack.com", "password": "Password123!" }
+
+### 27. 다른 일반 유저가 user의 상품 수정 시도 (403 예상)
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{ "name": "남이바꾼이름" }
+
+### 28. 다른 일반 유저가 user의 상품 삭제 시도 (403 예상)
+DELETE {{baseUrl}}/products/{{myProductId}}
+
+### 29. 로그인 - 관리자
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "admin@snack.com", "password": "Password123!" }
+
+### 30. 관리자가 user의 상품 수정 (200 예상)
+# 본인 상품이 아니어도 ADMIN 이상이라 가능
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{ "name": "포카칩 오리지널 대용량", "price": 3200 }
+
+### --- 삭제 ---
+
+### 31. 관리자가 상품 삭제 (200 예상)
+# 소프트 삭제. 응답은 data.id 만
+DELETE {{baseUrl}}/products/{{myProductId}}
+
+### 32. 삭제한 상품 상세 (404 예상)
+GET {{baseUrl}}/products/{{myProductId}}
+
+### 33. 삭제한 상품 재삭제 (404 예상)
+# 이미 삭제된 상품은 조회 단계에서 없는 상품으로 처리됨
+DELETE {{baseUrl}}/products/{{myProductId}}
+
+### --- 인증 ---
+
+### 34. 로그아웃
+# 서버가 쿠키 삭제 응답을 보내므로 클라이언트 저장소에서도 사라짐
+POST {{baseUrl}}/auth/signout
+
+### 35. 쿠키 없이 목록 조회 (401 예상)
+# "로그인이 필요합니다."
+GET {{baseUrl}}/products
+
+### 36. 시드 초기화
+# 위 테스트로 상품이 추가·수정·삭제되었으므로 터미널에서 npm run seed 실행
