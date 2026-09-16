@@ -17,8 +17,9 @@ type CreateData = {
   categoryId: number;
   createdById: number;
   organizationId: number;
-  imageUrl?: string;
-  productUrl?: string;
+  // null은 값을 비우는 뜻이다. 수정에서 이미지·링크를 지울 수 있어야 해서 허용한다.
+  imageUrl?: string | null;
+  productUrl?: string | null;
 };
 
 // 등록자와 소속 조직은 등록 시점에 정해지고 수정으로 바꿀 수 없다.
@@ -91,7 +92,10 @@ function buildWhere({
   return {
     isDeleted: false,
     organizationId,
-    ...(keyword ? { name: { contains: keyword } } : {}),
+    // mode를 빼면 PostgreSQL이 대소문자를 구분해 'coca'로 'Coca Cola'를 못 찾는다.
+    ...(keyword
+      ? { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } }
+      : {}),
     ...(categoryId
       ? { OR: [{ categoryId }, { category: { parentId: categoryId } }] }
       : {}),

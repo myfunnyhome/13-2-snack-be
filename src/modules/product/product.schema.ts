@@ -9,6 +9,20 @@ export const PRODUCT_SORTS = [
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
+/*
+이미지와 제품 링크는 값을 비울 수 있어야 한다.
+상품 수정 모달에 이미지 삭제 버튼이 있고, 제품 링크는 입력칸을 지우면 빈 문자열로 온다.
+그래서 URL 문자열 외에 null과 빈 문자열도 받고, 빈 문자열은 null로 바꿔 저장한다.
+*/
+function nullableUrlSchema(message: string) {
+  return z
+    .preprocess(
+      (value) => (typeof value === 'string' ? value.trim() : value),
+      z.union([z.literal(''), z.null(), z.url({ error: message })]),
+    )
+    .transform((value) => (value === '' ? null : value));
+}
+
 export const productIdParamsSchema = z.object({
   id: z.coerce
     .number({ error: '올바른 상품 ID가 아닙니다.' })
@@ -66,18 +80,11 @@ export const createProductSchema = z.object(
       .int({ error: '올바른 카테고리 ID가 아닙니다.' })
       .positive({ error: '올바른 카테고리 ID가 아닙니다.' }),
 
-    imageUrl: z
-      .string()
-      .trim()
-      .pipe(z.url({ error: '올바른 이미지 URL이 아닙니다.' }))
-      .optional(),
+    // 업로드 API(POST /images)가 돌려준 주소를 그대로 받는다.
+    imageUrl: nullableUrlSchema('올바른 이미지 URL이 아닙니다.').optional(),
 
     // 관리자가 실제 구매할 외부 판매처 링크
-    productUrl: z
-      .string()
-      .trim()
-      .pipe(z.url({ error: '올바른 상품 URL이 아닙니다.' }))
-      .optional(),
+    productUrl: nullableUrlSchema('올바른 상품 URL이 아닙니다.').optional(),
   },
   { error: '요청 본문이 올바르지 않습니다.' },
 );

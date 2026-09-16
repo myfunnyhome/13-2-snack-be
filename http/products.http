@@ -49,6 +49,11 @@ GET {{baseUrl}}/products?limit=5&page=4
 # 초코파이만 나와야 함
 GET {{baseUrl}}/products?keyword=초코
 
+### 5-1. 영문 대소문자 무시 검색 (200 예상)
+# 14번으로 'Coca Cola Zero' 같은 영문 상품을 등록한 뒤 실행하세요.
+# 소문자로 검색해도 나와야 합니다. (Prisma mode: insensitive)
+GET {{baseUrl}}/products?keyword=coca
+
 ### 6. 소분류 필터 (200 예상)
 # 홈런볼, 빼빼로만 나와야 함
 GET {{baseUrl}}/products?categoryId={{subCategoryId}}
@@ -167,6 +172,20 @@ PATCH {{baseUrl}}/products/{{myProductId}}
 Content-Type: application/json
 
 { "price": 1800 }
+
+### 24-1. 이미지 비우기 (200 예상)
+# 수정 모달의 이미지 삭제 버튼에 대응. data.imageUrl이 null이 되어야 함
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{ "imageUrl": null }
+
+### 24-2. 제품 링크 비우기 - 빈 문자열 (200 예상)
+# 입력칸을 지우면 프론트가 ""를 보낸다. null로 저장되어야 함
+PATCH {{baseUrl}}/products/{{myProductId}}
+Content-Type: application/json
+
+{ "productUrl": "" }
 
 ### 25. 남(admin)이 등록한 상품 수정 시도 (403 예상)
 # "본인이 등록한 상품만 수정하거나 삭제할 수 있습니다."
