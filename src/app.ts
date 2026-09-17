@@ -25,10 +25,10 @@ app.use(cookieParser());
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
 app.use('/auth', authRoutes);
 app.use('/invitations', invitationsRoutes);
+app.use('/products', productsRoutes);
 app.use('/me', meRoutes);
 // app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);
-app.use('/products', productsRoutes);
 
 // 매칭되는 라우트가 없는 요청
 // 응답을 직접 만들지 않고 NotFoundError를 넘겨 errorHandler가 처리하게 한다.
