@@ -1,15 +1,9 @@
 import { Router } from 'express';
 
-import { authenticate, authorize } from '../../middlewares/auth.middleware';
 import * as invitationController from '../../modules/invitation/invitation.controller';
 
 const router = Router();
 
-router.post(
-  '/',
-  authenticate,
-  authorize('SUPER_ADMIN'),
-  invitationController.create,
-);
+router.post('/', invitationController.create);
 
 export default router;
