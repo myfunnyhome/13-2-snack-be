@@ -319,8 +319,12 @@ async function main() {
 
   await prisma.cartItem.createMany({
     data: [
-      { userId: user.id, productId: saewookkang.id, quantity: 3 },
-      { userId: user.id, productId: chocopie.id, quantity: 1 },
+      { userId: user.id, productId: saewookkang.id, quantity: 3 }, // 1: 취소용
+      { userId: user.id, productId: chocopie.id, quantity: 1 }, // 2: 승인용
+      { userId: user.id, productId: homeRunBall.id, quantity: 1 }, // 3: 반려용
+      { userId: user.id, productId: pepero.id, quantity: 1 }, // 4: quantity=0 테스트용
+      { userId: admin.id, productId: cola.id, quantity: 10 }, // 5: 즉시구매 정상용
+      { userId: admin.id, productId: americano.id, quantity: 20 }, // 6: 즉시구매 예산초과용
       ...extraUsers.map((extraUser, i) => ({
         userId: extraUser.id,
         productId: extraProducts[i].id,
