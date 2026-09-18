@@ -7,6 +7,7 @@ import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
 import invitationsRoutes from './routes/invitations.route';
 import meRoutes from './routes/me';
+import ordersRoutes from './routes/orders.route';
 import productsRoutes from './routes/products.route';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
@@ -25,9 +26,10 @@ app.use(cookieParser());
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
 app.use('/auth', authRoutes);
 app.use('/invitations', invitationsRoutes);
+app.use('/orders', ordersRoutes);
 app.use('/products', productsRoutes);
 app.use('/me', meRoutes);
-// app.use('/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);
 
 // 매칭되는 라우트가 없는 요청
