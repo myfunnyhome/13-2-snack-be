@@ -38,11 +38,18 @@ export const productIdParamsSchema = z.object({
 export const searchProductsSchema = z.object({
   keyword: z.string().trim().optional(),
 
-  // 대분류 ID를 보내면 하위 소분류 상품까지 함께 조회된다.
+  // 소분류 ID. 그 소분류 상품만 조회한다.
   categoryId: z.coerce
     .number({ error: 'categoryId는 숫자여야 합니다.' })
     .int({ error: 'categoryId는 정수여야 합니다.' })
     .positive({ error: 'categoryId는 1 이상이어야 합니다.' })
+    .optional(),
+
+  // 대분류 ID. 그 아래 소분류 상품을 모두 조회한다.
+  parentCategoryId: z.coerce
+    .number({ error: 'parentCategoryId는 숫자여야 합니다.' })
+    .int({ error: 'parentCategoryId는 정수여야 합니다.' })
+    .positive({ error: 'parentCategoryId는 1 이상이어야 합니다.' })
     .optional(),
 
   sort: z
@@ -68,7 +75,12 @@ export const searchProductsSchema = z.object({
 export const createProductSchema = z.object(
   {
     name: z
-      .string({ error: '상품명은 필수 값입니다.' })
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? '상품명은 필수 값입니다.'
+            : '상품명은 문자열이어야 합니다.',
+      })
       .trim()
       .min(1, { error: '상품명은 1자 이상이어야 합니다.' })
       .max(100, { error: '상품명은 100자 이하여야 합니다.' }),

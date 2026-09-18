@@ -61,7 +61,11 @@ GET {{baseUrl}}/products?categoryId={{subCategoryId}}
 ### 7. 대분류 필터 (200 예상)
 # 과자 아래 소분류(칩·쿠키·초콜릿·젤리·사탕 등) 상품이 모두 나와야 함
 # 음료 쪽 상품(콜라·아메리카노 등)은 나오면 안 됨
-GET {{baseUrl}}/products?categoryId={{parentCategoryId}}&limit=20
+GET {{baseUrl}}/products?parentCategoryId={{parentCategoryId}}&limit=20
+
+### 7-1. 소분류 파라미터에 대분류 id를 넣은 경우 (200 예상, 0건)
+# categoryId는 소분류 하나만 뜻하므로 대분류 id를 넣으면 섞여 나오지 않고 빈 목록이어야 함
+GET {{baseUrl}}/products?categoryId={{parentCategoryId}}
 
 ### 8. 정렬 - 판매량순 (200 예상)
 # purchaseCount 내림차순
@@ -145,6 +149,13 @@ POST {{baseUrl}}/products
 Content-Type: application/json
 
 { "name": "", "price": 1500, "categoryId": {{subCategoryId}} }
+
+### 19-1. 상품명이 문자열이 아님 (400 예상)
+# "상품명은 문자열이어야 합니다." (없으면 "상품명은 필수 값입니다.")
+POST {{baseUrl}}/products
+Content-Type: application/json
+
+{ "name": 12345, "price": 1500, "categoryId": {{subCategoryId}} }
 
 ### 20. 가격 음수 (400 예상)
 # "가격은 0 이상이어야 합니다."

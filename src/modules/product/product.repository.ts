@@ -8,6 +8,7 @@ type FindManyParams = {
   createdById?: number;
   keyword?: string;
   categoryId?: number;
+  parentCategoryId?: number;
   sort: ProductSort;
   skip: number;
   take: number;
@@ -76,15 +77,20 @@ const ORDER_BY: Record<ProductSort, Prisma.ProductOrderByWithRelationInput[]> =
     priceDesc: [{ price: 'desc' }, { id: 'desc' }],
   };
 
-// 회사별로 거르고, categoryId가 대분류면 하위 소분류 상품까지 포함한다.
+// 회사별로 거른다. categoryId는 소분류 하나, parentCategoryId는 그 대분류 아래 전체를 뜻한다.
 function buildWhere({
   organizationId,
   createdById,
   keyword,
   categoryId,
+  parentCategoryId,
 }: Pick<
   FindManyParams,
-  'organizationId' | 'createdById' | 'keyword' | 'categoryId'
+  | 'organizationId'
+  | 'createdById'
+  | 'keyword'
+  | 'categoryId'
+  | 'parentCategoryId'
 >): Prisma.ProductWhereInput {
   return {
     isDeleted: false,
@@ -93,9 +99,8 @@ function buildWhere({
     ...(keyword
       ? { name: { contains: keyword, mode: Prisma.QueryMode.insensitive } }
       : {}),
-    ...(categoryId
-      ? { OR: [{ categoryId }, { category: { parentId: categoryId } }] }
-      : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(parentCategoryId ? { category: { parentId: parentCategoryId } } : {}),
   };
 }
 
@@ -104,6 +109,7 @@ export function findMany({
   createdById,
   keyword,
   categoryId,
+  parentCategoryId,
   sort,
   skip,
   take,
@@ -113,6 +119,7 @@ export function findMany({
     createdById,
     keyword,
     categoryId,
+    parentCategoryId,
   });
 
   return Promise.all([
