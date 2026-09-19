@@ -109,6 +109,13 @@ export async function searchProducts({
   // totalPages는 팀의 user 목록 API와 응답 형태를 맞추려고 그대로 둔다.
   const totalPages = Math.ceil(totalCount / limit);
 
+  // 마지막 페이지를 넘는 요청은 400. 결과가 0건이어도 1페이지는 빈 목록으로 응답한다.
+  const lastPage = Math.max(totalPages, 1);
+
+  if (page > lastPage) {
+    throw new BadRequestError(`page는 ${lastPage} 이하여야 합니다.`);
+  }
+
   return {
     products,
     page,

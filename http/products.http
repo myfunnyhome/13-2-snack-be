@@ -45,6 +45,18 @@ GET {{baseUrl}}/products?limit=5&page=1
 # hasNext false 여야 함
 GET {{baseUrl}}/products?limit=5&page=4
 
+### 4-1. 마지막 페이지를 넘는 요청 (400 예상)
+# "page는 4 이하여야 합니다."
+GET {{baseUrl}}/products?limit=5&page=5
+
+### 4-2. 결과가 0건이면 1페이지는 빈 목록 (200 예상)
+# 없는 상품명으로 검색 → products 빈 배열, totalPages 0
+GET {{baseUrl}}/products?keyword=존재하지않는상품
+
+### 4-3. 결과가 0건일 때 2페이지 (400 예상)
+# "page는 1 이하여야 합니다."
+GET {{baseUrl}}/products?keyword=존재하지않는상품&page=2
+
 ### 5. 이름 검색 (200 예상)
 # 초코파이만 나와야 함
 GET {{baseUrl}}/products?keyword=초코
