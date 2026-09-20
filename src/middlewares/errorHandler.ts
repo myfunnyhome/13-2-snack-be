@@ -3,6 +3,7 @@ import { UnauthorizedError as ExpressJwtUnauthorizedError } from 'express-jwt';
 import { ZodError } from 'zod';
 
 import { Prisma } from '../generated/prisma/client';
+// import { clearCookieOptions } from '../modules/auth/auth.controller'; 추가 필요한데 추가해도 되는지?
 import { AppError } from '../types/errors';
 
 /*
@@ -51,6 +52,11 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       : isRefreshRequest
         ? 'SESSION_EXPIRED'
         : 'TOKEN_EXPIRED';
+
+    // if (isRefreshRequest) { 추가 필요한데 추가해도 되는지?
+    //   res.clearCookie('accessToken', clearCookieOptions);
+    //   res.clearCookie('refreshToken', clearCookieOptions);
+    // }
 
     return res.status(401).json({
       success: false,
