@@ -1,13 +1,13 @@
 import { prisma } from '../../config/prisma';
 import type { Budget, Organization } from '../../generated/prisma/client';
-
-const today = new Date();
+import type { Prisma } from '../../generated/prisma/client';
 
 //이번달 Budget 데이터 가져오기
 // Budget에서 startingBudget, spentAmount (currentMonthBudget, currentMonthSpending)
 export async function findCurrentMonthBudget(
   organizationId: number,
 ): Promise<Budget | null> {
+  const today = new Date();
   const thisYear = today.getFullYear();
   const thisMonth = today.getMonth() + 1;
 
@@ -27,6 +27,7 @@ export async function findCurrentMonthBudget(
 export async function findPreviousMonthBudget(
   organizationId: number,
 ): Promise<Budget | null> {
+  const today = new Date();
   const previousDate = new Date(today.getFullYear(), today.getMonth() - 1);
   const previousYear = previousDate.getFullYear();
   const previousMonth = previousDate.getMonth() + 1;
@@ -47,6 +48,7 @@ export async function findPreviousMonthBudget(
 export async function findCurrentYearSpending(
   organizationId: number,
 ): Promise<number> {
+  const today = new Date();
   const thisYear = today.getFullYear();
 
   const budget = await prisma.budget.aggregate({
@@ -67,6 +69,7 @@ export async function findCurrentYearSpending(
 export async function findPreviousYearSpending(
   organizationId: number,
 ): Promise<number> {
+  const today = new Date();
   const previousYear = today.getFullYear() - 1;
 
   const budget = await prisma.budget.aggregate({
@@ -101,14 +104,17 @@ export async function findDefaultBudget(
 
 // 이번달 Budget의 예산 데이터 수정하기
 // Budget에서 startingBudget (currentMonthBudget)
+// tx를 사용해서 아래의 updateDefaultBudget과 transaction에 함께 쓰일 수 있게 한다.
 export async function updateStartingBudget(
+  tx: Prisma.TransactionClient,
   organizationId: number,
   startingBudget: number,
 ): Promise<Budget> {
+  const today = new Date();
   const thisYear = today.getFullYear();
   const thisMonth = today.getMonth() + 1;
 
-  return await prisma.budget.update({
+  return tx.budget.update({
     where: {
       organizationId_year_month: {
         organizationId,
@@ -124,11 +130,13 @@ export async function updateStartingBudget(
 
 // 매달의 디폴트 예산 데이터 수정하기
 // Organization에서 defaultBudget (monthlyStartingBudget)
+// tx를 사용해서 위의 updateStartingBudget과 transaction에 함께 쓰일 수 있게 한다.
 export async function updateDefaultBudget(
+  tx: Prisma.TransactionClient,
   organizationId: number,
   defaultBudget: number,
 ): Promise<Organization['defaultBudget']> {
-  const organization = await prisma.organization.update({
+  const organization = await tx.organization.update({
     where: {
       id: organizationId,
     },
@@ -139,5 +147,6 @@ export async function updateDefaultBudget(
       defaultBudget: true,
     },
   });
-  return organization?.defaultBudget ?? 0;
+
+  return organization.defaultBudget;
 }

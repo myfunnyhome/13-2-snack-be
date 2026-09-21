@@ -1,3 +1,4 @@
+import { prisma } from '../../config/prisma';
 import { BadRequestError, NotFoundError } from '../../types/errors';
 import * as budgetRepository from './budgets.repository';
 import { BudgetResult, SpendingSummaryResult } from './budgets.type';
@@ -30,13 +31,23 @@ export async function updateBudget(
     throw new BadRequestError('수정할 값을 입력해야 합니다.');
   }
 
-  if (startingBudget !== undefined) {
-    await budgetRepository.updateStartingBudget(organizationId, startingBudget);
-  }
+  await prisma.$transaction(async (tx) => {
+    if (startingBudget !== undefined) {
+      await budgetRepository.updateStartingBudget(
+        tx,
+        organizationId,
+        startingBudget,
+      );
+    }
 
-  if (defaultBudget !== undefined) {
-    await budgetRepository.updateDefaultBudget(organizationId, defaultBudget);
-  }
+    if (defaultBudget !== undefined) {
+      await budgetRepository.updateDefaultBudget(
+        tx,
+        organizationId,
+        defaultBudget,
+      );
+    }
+  });
 
   return await getBudget(organizationId);
 }
