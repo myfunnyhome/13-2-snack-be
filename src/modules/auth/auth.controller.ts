@@ -28,7 +28,7 @@ const refreshCookieOptions: CookieOptions = {
   path: '/',
 };
 
-const clearCookieOptions: CookieOptions = {
+export const clearCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
   sameSite: isProduction ? 'none' : 'lax',
@@ -69,16 +69,24 @@ export async function signin(req: Request, res: Response): Promise<void> {
 }
 
 export async function refreshToken(req: Request, res: Response): Promise<void> {
-  const { accessToken, refreshToken } = await authService.refresh(
-    req.cookies.refreshToken,
-    req.auth!.userId,
-  );
+  try {
+    const { accessToken, refreshToken } = await authService.refresh(
+      req.cookies.refreshToken,
+      req.auth!.userId,
+    );
 
-  res
-    .cookie('accessToken', accessToken, accessCookieOptions)
-    .cookie('refreshToken', refreshToken, refreshCookieOptions)
-    .status(200)
-    .json({ success: true });
+    res
+      .cookie('accessToken', accessToken, accessCookieOptions)
+      .cookie('refreshToken', refreshToken, refreshCookieOptions)
+      .status(200)
+      .json({ success: true });
+  } catch (error) {
+    res
+      .clearCookie('accessToken', clearCookieOptions)
+      .clearCookie('refreshToken', clearCookieOptions);
+
+    throw error;
+  }
 }
 
 export async function signout(req: Request, res: Response): Promise<void> {
