@@ -3,6 +3,7 @@ import { Prisma } from '../../generated/prisma/client';
 
 type FindManyParams = {
   userId: number; 
+  organizationId: number; 
   skip: number; 
   take: number; 
 };
@@ -21,30 +22,37 @@ const wishlistListArgs = {
   },
 } satisfies Prisma.WishlistItemDefaultArgs;
 
+
 export type WishlistListRow = Prisma.WishlistItemGetPayload<
   typeof wishlistListArgs
 >;
+
 
 const ORDER_BY: Prisma.WishlistItemOrderByWithRelationInput[] = [
   { createdAt: 'desc' },
   { id: 'desc' },
 ];
 
-
-function buildWhere(userId: number): Prisma.WishlistItemWhereInput {
+function buildWhere(
+  userId: number,
+  organizationId: number,
+): Prisma.WishlistItemWhereInput {
   return {
     userId, 
-    product: { isDeleted: false }, 
+    product: {
+      isDeleted: false,
+      organizationId,
+    }, 
   };
 }
 
-
 export function findMany({
   userId,
+  organizationId,
   skip,
   take,
 }: FindManyParams): Promise<[WishlistListRow[], number]> {
-  const where = buildWhere(userId);
+  const where = buildWhere(userId, organizationId);
 
   return Promise.all([
     prisma.wishlistItem.findMany({
@@ -58,12 +66,17 @@ export function findMany({
   ]);
 }
 
-export function findAllIds(userId: number): Promise<{ productId: number }[]> {
+
+export function findAllIds(
+  userId: number,
+  organizationId: number,
+): Promise<{ productId: number }[]> {
   return prisma.wishlistItem.findMany({
-    where: buildWhere(userId),
+    where: buildWhere(userId, organizationId),
     select: { productId: true },
   });
 }
+
 
 export function upsert(
   userId: number,
@@ -77,6 +90,7 @@ export function upsert(
   });
 }
 
+
 export function deleteOne(
   userId: number,
   productId: number,
@@ -85,6 +99,7 @@ export function deleteOne(
     where: { userId, productId },
   });
 }
+
 
 export function deleteMany(
   userId: number,

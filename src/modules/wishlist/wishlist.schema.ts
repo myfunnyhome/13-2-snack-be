@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+
 export const wishlistProductIdParamsSchema = z.object({
   productId: z.coerce
     .number({ error: '올바른 상품 ID가 아닙니다.' })
@@ -7,12 +8,14 @@ export const wishlistProductIdParamsSchema = z.object({
     .positive({ error: '올바른 상품 ID가 아닙니다.' }),
 });
 
+
 export const wishlistListQuerySchema = z.object({
   page: z.coerce
     .number({ error: 'page는 숫자여야 합니다.' })
     .int({ error: 'page는 정수여야 합니다.' })
     .min(1, { error: 'page는 1 이상이어야 합니다.' })
     .default(1),
+
   limit: z.coerce
     .number({ error: 'limit은 숫자여야 합니다.' })
     .int({ error: 'limit은 정수여야 합니다.' })

@@ -9,11 +9,12 @@ import * as wishlistService from './wishlist.service';
 
 export async function getWishlist(req: Request, res: Response): Promise<void> {
   const query = wishlistListQuerySchema.parse(req.query);
-
   const result = await wishlistService.getWishlist({
     ...query,
     userId: req.auth!.userId,
+    organizationId: req.auth!.organizationId,
   });
+
   res.status(200).json({
     success: true,
     data: result,
@@ -26,6 +27,7 @@ export async function getWishlistIds(
 ): Promise<void> {
   const result = await wishlistService.getWishlistIds({
     userId: req.auth!.userId,
+    organizationId: req.auth!.organizationId,
   });
 
   res.status(200).json({
@@ -51,6 +53,7 @@ export async function addWishlistItem(
     data: result,
   });
 }
+
 
 export async function removeWishlistItem(
   req: Request,
