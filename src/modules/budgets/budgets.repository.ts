@@ -89,7 +89,7 @@ export async function findPreviousYearSpending(
 // Organization에서 defaultBudget (monthlyStartingBudget)
 export async function findDefaultBudget(
   organizationId: number,
-): Promise<Organization['defaultBudget']> {
+): Promise<Organization['defaultBudget'] | null> {
   const organization = await prisma.organization.findUnique({
     where: {
       id: organizationId,
@@ -99,7 +99,7 @@ export async function findDefaultBudget(
     },
   });
 
-  return organization?.defaultBudget ?? 0;
+  return organization?.defaultBudget ?? null;
 }
 
 // 이번달 Budget의 예산 데이터 수정하기
