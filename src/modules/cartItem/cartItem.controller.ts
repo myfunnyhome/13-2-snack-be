@@ -8,7 +8,7 @@ import {
 import * as cartItemService from './cartItem.service';
 
 // ------------------------------
-// GET /me/cartItems
+// GET /me/cart-items
 // ------------------------------
 
 export async function getCartItems(req: Request, res: Response): Promise<void> {
@@ -18,7 +18,7 @@ export async function getCartItems(req: Request, res: Response): Promise<void> {
 }
 
 // ------------------------------
-// POST /me/cartItems
+// POST /me/cart-items
 // ------------------------------
 
 export async function addCartItem(req: Request, res: Response): Promise<void> {
@@ -33,7 +33,7 @@ export async function addCartItem(req: Request, res: Response): Promise<void> {
 }
 
 // ------------------------------
-// PATCH /me/cartItems/:id
+// PATCH /me/cart-items/:id
 // ------------------------------
 
 export async function updateCartItem(
@@ -48,7 +48,7 @@ export async function updateCartItem(
 }
 
 // ------------------------------
-// DELETE /me/cartItems/:id
+// DELETE /me/cart-items/:id
 // ------------------------------
 
 export async function removeCartItem(

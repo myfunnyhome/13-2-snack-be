@@ -20,7 +20,7 @@ function toCartItem(cartItem: cartItemRepository.CartItemRecord) {
 }
 
 // ------------------------------
-// GET /me/cartItems
+// GET /me/cart-items
 // ------------------------------
 
 export async function getCartItems(userId: number) {
@@ -29,7 +29,7 @@ export async function getCartItems(userId: number) {
 }
 
 // ------------------------------
-// POST /me/cartItems
+// POST /me/cart-items
 // ------------------------------
 
 export async function addCartItem(
@@ -77,7 +77,7 @@ export async function addCartItem(
 }
 
 // ------------------------------
-// PATCH /me/cartItems/:id
+// PATCH /me/cart-items/:id
 // ------------------------------
 
 export async function updateCartItem(
@@ -97,7 +97,7 @@ export async function updateCartItem(
 }
 
 // ------------------------------
-// DELETE /me/cartItems/:id
+// DELETE /me/cart-items/:id
 // ------------------------------
 
 export async function removeCartItem(userId: number, cartItemId: number) {
