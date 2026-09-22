@@ -83,6 +83,11 @@ Content-Type: image/jpeg
 # 응답이 JSON이 아니라 이미지 자체여야 함 (Content-Type: image/jpeg)
 GET {{baseUrl}}/images/{{imageKey}}
 
+### 7-1. 로그인 없이 조회 (브라우저 시크릿 창에서 확인, 200 예상)
+# http://localhost:3001/images/{imageKey} 를 주소창에 직접 입력
+# 조회는 인증을 요구하지 않으므로 쿠키 없이도 이미지가 보여야 합니다.
+# (업로드·삭제는 그대로 로그인이 필요합니다)
+
 ### 8. 없는 이미지 (404 예상)
 # "이미지를 찾을 수 없습니다."
 GET {{baseUrl}}/images/public/products/없는파일.jpg

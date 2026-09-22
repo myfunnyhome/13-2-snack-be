@@ -39,8 +39,9 @@ export async function getImage(req: Request, res: Response): Promise<void> {
   if (image.contentLength !== undefined) {
     res.setHeader('Content-Length', image.contentLength);
   }
-  // key가 UUID라 내용이 바뀌지 않는다. 로그인한 사용자 브라우저에만 오래 캐시한다.
-  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  // key가 UUID라 같은 주소의 내용이 바뀌지 않는다.
+  // 조회에 인증이 없으므로 공용 캐시(CDN 등)에도 오래 담아둘 수 있다.
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   // 올린 파일을 브라우저가 이미지가 아닌 다른 형식으로 해석하지 못하게 막는다.
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
