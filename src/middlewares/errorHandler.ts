@@ -76,7 +76,17 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     });
   }
 
-  // 3) Prisma에서 던지는 알려진 에러
+  // 3) 잘못된 JSON 형태
+  if (err instanceof SyntaxError) {
+    res.status(400).json({
+      success: false,
+      message: '잘못된 JSON 형식입니다.',
+      code: 'BAD_REQUEST',
+    });
+    return;
+  }
+
+  // 4) Prisma에서 던지는 알려진 에러
   // 대부분 서비스 레이어에서 사전 체크로 걸러지지만, 동시 요청 등으로
   // 사전 체크와 실제 쿼리 사이에 상태가 바뀌는 극히 드문 경우를 대비한 방어 코드.
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
@@ -97,7 +107,7 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     }
   }
 
-  // 4) 예상 못 한 모든 에러 (최후의 보루)
+  // 5) 예상 못 한 모든 에러 (최후의 보루)
   // 상세 원인은 서버 로그에만, 사용자에겐 일반 메시지만 노출
   console.error('Unhandled error:', err);
   return res.status(500).json({

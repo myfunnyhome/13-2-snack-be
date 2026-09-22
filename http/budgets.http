@@ -1,0 +1,255 @@
+@baseUrl = http://localhost:3001
+@accessToken = 
+@adminAccessToken = 
+@superAdminAccessToken = 
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# superadmin@snack.com   SUPER_ADMIN
+# admin@snack.com        ADMIN
+# user@snack.com         GENERAL
+# staff01@snack.com      GENERAL
+
+
+### ========================================
+### 1. 로그인 
+### ========================================
+
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "user@snack.com",
+  "password": "Password123!"
+}
+
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@snack.com",
+  "password": "Password123!"
+}
+
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "superadmin@snack.com",
+  "password": "Password123!"
+}
+
+
+# Super Admin 이상 가능
+### ========================================
+### 2. 예산 조회 - 200 예상
+### ========================================
+
+GET {{baseUrl}}/super-admin/budgets/setting
+Cookie: accessToken={{superAdminAccessToken}}
+
+
+### ========================================
+### 3. 예산 조회 - 인증 없이
+### 401 예상
+### ========================================
+
+GET {{baseUrl}}/super-admin/budgets/setting
+
+
+### ========================================
+### 4. 예산 수정 - 이번달 예산
+### 200 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 500000
+}
+
+
+### ========================================
+### 5. 예산 수정 - 기본 예산
+### 200 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "defaultBudget": 1000000
+}
+
+
+### ========================================
+### 6. 예산 수정 - 두 값 모두 수정
+### 200 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 999998,
+  "defaultBudget": 9999999
+}
+
+
+### ========================================
+### 7. 예산 수정 - 0원
+### 200 예상
+### 0도 유효한 값인지 확인
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 0
+}
+
+
+### ========================================
+### 8. 예산 수정 - 음수
+### 400 예상
+### Zod: nonnegative()
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": -10000
+}
+
+
+### ========================================
+### 9. 기본 예산 수정 - 음수
+### 400 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "defaultBudget": -10000
+}
+
+
+### ========================================
+### 10. 예산 수정 - 소수
+### 400 예상
+### Zod: int()
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 10000.5
+}
+
+
+### ========================================
+### 11. 예산 수정 - 숫자가 아닌 값
+### 400 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": "100000"
+}
+
+
+### ========================================
+### 12. 예산 수정 - null
+### 400 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": null
+}
+
+
+### ========================================
+### 13. 예산 수정 - 존재하지 않는 필드
+### 400 예상
+### Zod: strict()
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 500000,
+  "unknownField": 123
+}
+
+
+### ========================================
+### 14. 예산 수정 - 빈 Body
+### 400 예상
+### Service: 수정할 값 없음
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{}
+
+
+### ========================================
+### 15. 예산 수정 - 잘못된 JSON
+### 400 예상
+### ========================================
+
+PATCH {{baseUrl}}/super-admin/budgets/setting
+Content-Type: application/json
+Cookie: accessToken={{superAdminAccessToken}}
+
+{
+  "startingBudget": 500000,
+}
+
+# Admin 이상 가능
+### ========================================
+### 16. 지출/예산 요약 조회 - 200 예상
+### ========================================
+
+GET {{baseUrl}}/admin/budgets/summary
+Cookie: accessToken={{adminAccessToken}}
+
+GET {{baseUrl}}/super-admin/budgets/summary
+Cookie: accessToken={{superAdminAccessToken}}
+
+
+### ========================================
+### 17. 지출/예산 요약 조회 - 인증 없이
+### 401 예상
+### ========================================
+
+GET {{baseUrl}}/super-admin/budgets/summary
+
+### ========================================
+### 18. 권한에 맞지 않은 경로를 사용한 경우 - 예산 조회
+### 403 예상
+### ========================================
+GET {{baseUrl}}/super-admin/budgets/setting
+Cookie: accessToken={{adminAccessToken}}
