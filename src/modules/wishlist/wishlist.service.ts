@@ -1,8 +1,6 @@
 import { ForbiddenError, NotFoundError } from '../../types/errors';
-import * as productRepository from '../product/product.repository';
 import * as wishlistRepository from './wishlist.repository';
 import type { WishlistListRow } from './wishlist.repository';
-
 
 type GetWishlistParams = {
   userId: number;
@@ -11,9 +9,7 @@ type GetWishlistParams = {
   limit: number;
 };
 
-
 type WishlistProductItem = WishlistListRow['product'];
-
 
 type GetWishlistResult = {
   items: WishlistProductItem[];
@@ -31,7 +27,7 @@ type GetWishlistIdsParams = {
 
 type AddWishlistItemParams = {
   userId: number;
-  organizationId: number; 
+  organizationId: number;
   productId: number;
 };
 
@@ -45,7 +41,6 @@ type RemoveWishlistItemsParams = {
   productIds: number[];
 };
 
-
 export async function getWishlist({
   userId,
   organizationId,
@@ -55,10 +50,9 @@ export async function getWishlist({
   const [rows, totalCount] = await wishlistRepository.findMany({
     userId,
     organizationId,
-    skip: (page - 1) * limit, 
+    skip: (page - 1) * limit,
     take: limit,
   });
-
 
   const totalPages = Math.ceil(totalCount / limit);
 
@@ -72,7 +66,6 @@ export async function getWishlist({
   };
 }
 
-
 export async function getWishlistIds({
   userId,
   organizationId,
@@ -81,13 +74,12 @@ export async function getWishlistIds({
   return { productIds: rows.map((row) => row.productId) };
 }
 
-
 export async function addWishlistItem({
   userId,
   organizationId,
   productId,
 }: AddWishlistItemParams): Promise<{ productId: number }> {
-  const product = await productRepository.findAccessById(productId);
+  const product = await wishlistRepository.findAccessById(productId);
 
   if (!product || product.isDeleted) {
     throw new NotFoundError('상품을 찾을 수 없습니다.');
@@ -111,7 +103,6 @@ export async function removeWishlistItem({
 
   return { productId, deletedCount: count };
 }
-
 
 export async function removeWishlistItems({
   userId,

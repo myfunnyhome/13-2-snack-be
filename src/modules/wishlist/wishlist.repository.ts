@@ -2,17 +2,17 @@ import { prisma } from '../../config/prisma';
 import { Prisma } from '../../generated/prisma/client';
 
 type FindManyParams = {
-  userId: number; 
-  organizationId: number; 
-  skip: number; 
-  take: number; 
+  userId: number;
+  organizationId: number;
+  skip: number;
+  take: number;
 };
 
 const wishlistListArgs = {
   select: {
     product: {
       select: {
-        id: true, 
+        id: true,
         name: true,
         price: true,
         imageUrl: true,
@@ -22,11 +22,19 @@ const wishlistListArgs = {
   },
 } satisfies Prisma.WishlistItemDefaultArgs;
 
-
 export type WishlistListRow = Prisma.WishlistItemGetPayload<
   typeof wishlistListArgs
 >;
 
+const productAccessArgs = {
+  select: {
+    id: true,
+    organizationId: true,
+    isDeleted: true,
+  },
+} satisfies Prisma.ProductDefaultArgs;
+
+type ProductAccess = Prisma.ProductGetPayload<typeof productAccessArgs>;
 
 const ORDER_BY: Prisma.WishlistItemOrderByWithRelationInput[] = [
   { createdAt: 'desc' },
@@ -38,11 +46,11 @@ function buildWhere(
   organizationId: number,
 ): Prisma.WishlistItemWhereInput {
   return {
-    userId, 
+    userId,
     product: {
       isDeleted: false,
       organizationId,
-    }, 
+    },
   };
 }
 
@@ -57,15 +65,14 @@ export function findMany({
   return Promise.all([
     prisma.wishlistItem.findMany({
       where,
-      select: wishlistListArgs.select, 
-      orderBy: ORDER_BY, 
-      skip, 
-      take, 
+      select: wishlistListArgs.select,
+      orderBy: ORDER_BY,
+      skip,
+      take,
     }),
     prisma.wishlistItem.count({ where }),
   ]);
 }
-
 
 export function findAllIds(
   userId: number,
@@ -77,6 +84,14 @@ export function findAllIds(
   });
 }
 
+export function findAccessById(
+  productId: number,
+): Promise<ProductAccess | null> {
+  return prisma.product.findUnique({
+    where: { id: productId },
+    select: productAccessArgs.select,
+  });
+}
 
 export function upsert(
   userId: number,
@@ -90,7 +105,6 @@ export function upsert(
   });
 }
 
-
 export function deleteOne(
   userId: number,
   productId: number,
@@ -99,7 +113,6 @@ export function deleteOne(
     where: { userId, productId },
   });
 }
-
 
 export function deleteMany(
   userId: number,
