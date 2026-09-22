@@ -1,13 +1,11 @@
 import { z } from 'zod';
 
-
 export const wishlistProductIdParamsSchema = z.object({
   productId: z.coerce
     .number({ error: '올바른 상품 ID가 아닙니다.' })
     .int({ error: '올바른 상품 ID가 아닙니다.' })
     .positive({ error: '올바른 상품 ID가 아닙니다.' }),
 });
-
 
 export const wishlistListQuerySchema = z.object({
   page: z.coerce
@@ -40,7 +38,6 @@ export const batchDeleteWishlistBodySchema = z.object({
     )
     .min(1, { error: 'productIds는 1개 이상이어야 합니다.' }),
 });
-
 
 export type WishlistProductIdParams = z.infer<
   typeof wishlistProductIdParamsSchema

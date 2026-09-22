@@ -54,7 +54,6 @@ export async function addWishlistItem(
   });
 }
 
-
 export async function removeWishlistItem(
   req: Request,
   res: Response,
