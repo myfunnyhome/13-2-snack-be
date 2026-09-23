@@ -9,9 +9,30 @@ import {
   Role,
 } from '../src/generated/prisma/client';
 import { hashToken } from '../src/utils/token';
+import { SEED_CATEGORIES, SEED_PRODUCTS } from './seedCatalog';
 
 const DELIVERY_FEE = 3000;
 const DEMO_PASSWORD = 'Password123!';
+
+// 카테고리 id를 고정으로 넣으므로 시퀀스를 그 위에서 다시 시작한다.
+const CATEGORY_ID_SEQUENCE_START = 200;
+
+// 주문·장바구니 시나리오용 데모 상품이 쓰는 소분류 id (prisma/seedCatalog.ts 기준)
+const DEMO_CATEGORY = {
+  snack: 101, // 과자
+  pie: 103, // 파이
+  chocolate: 104, // 초콜릿류
+  biscuit: 107, // 비스켓류
+  jelly: 109, // 젤리류
+  nuts: 110, // 견과류
+  soda: 112, // 청량/탄산음료
+  juice: 113, // 과즙음료
+  energyDrink: 114, // 에너지음료
+  tea: 118, // 차류
+  milk: 119, // 두유/우유
+  coffee: 120, // 커피
+  water: 121, // 생수
+} as const;
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
@@ -141,28 +162,20 @@ async function main() {
     ],
   });
 
-  const [snack, drink] = await Promise.all([
-    prisma.category.create({ data: { name: '과자' } }),
-    prisma.category.create({ data: { name: '음료' } }),
-  ]);
+  // 카테고리는 id를 고정해서 넣는다. 프론트가 카테고리를 상수로 들고 있어서
+  // id가 실행할 때마다 바뀌면 화면의 카테고리 필터가 전부 어긋난다.
+  // 대분류를 먼저 넣어야 소분류의 parentId 외래키가 걸리지 않는다.
+  await prisma.category.createMany({
+    data: SEED_CATEGORIES.filter((category) => category.parentId === null),
+  });
+  await prisma.category.createMany({
+    data: SEED_CATEGORIES.filter((category) => category.parentId !== null),
+  });
 
-  const [chip, cookie, chocolate, coffee, soda] = await Promise.all([
-    prisma.category.create({
-      data: { name: '칩', parentId: snack.id },
-    }),
-    prisma.category.create({
-      data: { name: '쿠키', parentId: snack.id },
-    }),
-    prisma.category.create({
-      data: { name: '초콜릿', parentId: snack.id },
-    }),
-    prisma.category.create({
-      data: { name: '커피', parentId: drink.id },
-    }),
-    prisma.category.create({
-      data: { name: '탄산', parentId: drink.id },
-    }),
-  ]);
+  // id를 직접 넣으면 시퀀스가 그대로라, 이후 등록에서 id가 충돌한다.
+  await prisma.$executeRawUnsafe(
+    `ALTER SEQUENCE "Category_id_seq" RESTART WITH ${CATEGORY_ID_SEQUENCE_START};`,
+  );
 
   const [saewookkang, chocopie, homeRunBall, pepero, cola, americano] =
     await Promise.all([
@@ -171,7 +184,7 @@ async function main() {
           name: '새우깡',
           price: 1500,
           productUrl: 'https://www.example.com/products/saewookkang',
-          categoryId: chip.id,
+          categoryId: DEMO_CATEGORY.snack,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -181,7 +194,7 @@ async function main() {
           name: '초코파이',
           price: 4800,
           productUrl: 'https://www.example.com/products/chocopie',
-          categoryId: cookie.id,
+          categoryId: DEMO_CATEGORY.pie,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -191,7 +204,7 @@ async function main() {
           name: '홈런볼',
           price: 2500,
           productUrl: 'https://www.example.com/products/homerunball',
-          categoryId: chocolate.id,
+          categoryId: DEMO_CATEGORY.snack,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -201,7 +214,7 @@ async function main() {
           name: '빼빼로',
           price: 1200,
           productUrl: 'https://www.example.com/products/pepero',
-          categoryId: chocolate.id,
+          categoryId: DEMO_CATEGORY.chocolate,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -211,7 +224,7 @@ async function main() {
           name: '콜라',
           price: 2000,
           productUrl: 'https://www.example.com/products/cola',
-          categoryId: soda.id,
+          categoryId: DEMO_CATEGORY.soda,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -221,7 +234,7 @@ async function main() {
           name: '아메리카노',
           price: 4500,
           productUrl: 'https://www.example.com/products/americano',
-          categoryId: coffee.id,
+          categoryId: DEMO_CATEGORY.coffee,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -233,26 +246,11 @@ async function main() {
       name: '단종 과자',
       price: 1000,
       isDeleted: true,
-      categoryId: chip.id,
+      categoryId: DEMO_CATEGORY.snack,
       createdById: admin.id,
       organizationId: organization.id,
     },
   });
-
-  const extraCategories = await Promise.all(
-    [
-      { name: '젤리', parentId: snack.id },
-      { name: '사탕', parentId: snack.id },
-      { name: '견과', parentId: snack.id },
-      { name: '비스킷', parentId: snack.id },
-      { name: '파이', parentId: snack.id },
-      { name: '차', parentId: drink.id },
-      { name: '주스', parentId: drink.id },
-      { name: '우유', parentId: drink.id },
-      { name: '에너지드링크', parentId: drink.id },
-      { name: '생수', parentId: drink.id },
-    ].map((data) => prisma.category.create({ data })),
-  );
 
   const extraUsers = await Promise.all(
     [
@@ -281,29 +279,88 @@ async function main() {
 
   const extraProducts = await Promise.all(
     [
-      { name: '마이구미', price: 1800, slug: 'mygummi' },
-      { name: '하리보', price: 2200, slug: 'haribo' },
-      { name: '허니버터아몬드', price: 3500, slug: 'honey-almond' },
-      { name: '다이제', price: 2800, slug: 'digestive' },
-      { name: '후렌치파이', price: 3200, slug: 'french-pie' },
-      { name: '녹차', price: 1500, slug: 'green-tea' },
-      { name: '오렌지주스', price: 2500, slug: 'orange-juice' },
-      { name: '바나나우유', price: 1800, slug: 'banana-milk' },
-      { name: '핫식스', price: 2000, slug: 'hotsix' },
-      { name: '삼다수', price: 1000, slug: 'samdasoo' },
-    ].map((item, index) =>
+      {
+        name: '마이구미',
+        price: 1800,
+        slug: 'mygummi',
+        categoryId: DEMO_CATEGORY.jelly,
+      },
+      {
+        name: '하리보',
+        price: 2200,
+        slug: 'haribo',
+        categoryId: DEMO_CATEGORY.jelly,
+      },
+      {
+        name: '허니버터아몬드',
+        price: 3500,
+        slug: 'honey-almond',
+        categoryId: DEMO_CATEGORY.nuts,
+      },
+      {
+        name: '다이제',
+        price: 2800,
+        slug: 'digestive',
+        categoryId: DEMO_CATEGORY.biscuit,
+      },
+      {
+        name: '후렌치파이',
+        price: 3200,
+        slug: 'french-pie',
+        categoryId: DEMO_CATEGORY.pie,
+      },
+      {
+        name: '녹차',
+        price: 1500,
+        slug: 'green-tea',
+        categoryId: DEMO_CATEGORY.tea,
+      },
+      {
+        name: '오렌지주스',
+        price: 2500,
+        slug: 'orange-juice',
+        categoryId: DEMO_CATEGORY.juice,
+      },
+      {
+        name: '바나나우유',
+        price: 1800,
+        slug: 'banana-milk',
+        categoryId: DEMO_CATEGORY.milk,
+      },
+      {
+        name: '핫식스',
+        price: 2000,
+        slug: 'hotsix',
+        categoryId: DEMO_CATEGORY.energyDrink,
+      },
+      {
+        name: '삼다수',
+        price: 1000,
+        slug: 'samdasoo',
+        categoryId: DEMO_CATEGORY.water,
+      },
+    ].map((item) =>
       prisma.product.create({
         data: {
           name: item.name,
           price: item.price,
           productUrl: `https://www.example.com/products/${item.slug}`,
-          categoryId: extraCategories[index].id,
+          categoryId: item.categoryId,
           createdById: admin.id,
           organizationId: organization.id,
         },
       }),
     ),
   );
+
+  // 공식 시드 상품. 목록 정렬·무한 스크롤 QA에 쓸 카탈로그다.
+  await prisma.product.createMany({
+    data: SEED_PRODUCTS.map((product) => ({
+      ...product,
+      createdById: admin.id,
+      organizationId: organization.id,
+    })),
+  });
 
   await prisma.invitation.createMany({
     data: Array.from({ length: 10 }, (_, i) => ({
