@@ -25,6 +25,20 @@ type SearchProductsParams = SearchProductsInput & {
   createdById?: number;
 };
 
+/**
+ * 상세 응답에 요청자가 등록자인지(`isMine`)를 붙인다.
+ * 프론트가 수정·삭제 메뉴를 "본인 또는 ADMIN 이상"에만 보여주는데,
+ * 로그인 사용자 조회(GET /me)가 id를 주지 않아 본인 여부를 알 수 없어서 여기서 알려준다.
+ */
+type ProductDetailWithOwnership = ProductDetail & { isMine: boolean };
+
+function withOwnership(
+  product: ProductDetail,
+  userId: number,
+): ProductDetailWithOwnership {
+  return { ...product, isMine: product.createdBy.id === userId };
+}
+
 type SearchProductsResult = {
   products: ProductListItem[];
   page: number;
@@ -128,48 +142,52 @@ export async function searchProducts({
 
 export async function getProduct(
   productId: number,
-  organizationId: number,
-): Promise<ProductDetail> {
+  requester: Requester,
+): Promise<ProductDetailWithOwnership> {
   const product = await productRepository.findDetailById(
     productId,
-    organizationId,
+    requester.organizationId,
   );
 
   if (!product) {
     throw new NotFoundError('상품을 찾을 수 없습니다.');
   }
 
-  return product;
+  return withOwnership(product, requester.userId);
 }
 
 export async function createProduct({
   requester,
   categoryId,
   ...data
-}: CreateProductParams): Promise<ProductDetail> {
+}: CreateProductParams): Promise<ProductDetailWithOwnership> {
   await assertCategoryExists(categoryId);
 
-  return productRepository.create({
+  const product = await productRepository.create({
     ...data,
     categoryId,
     createdById: requester.userId,
     // 조직은 body로 받지 않는다. 받으면 다른 회사에 상품을 등록할 수 있다.
     organizationId: requester.organizationId,
   });
+
+  return withOwnership(product, requester.userId);
 }
 
 export async function updateProduct({
   productId,
   requester,
   data,
-}: UpdateProductParams): Promise<ProductDetail> {
+}: UpdateProductParams): Promise<ProductDetailWithOwnership> {
   await assertCanModify(productId, requester);
 
   if (data.categoryId !== undefined) {
     await assertCategoryExists(data.categoryId);
   }
 
-  return productRepository.update(productId, data);
+  const product = await productRepository.update(productId, data);
+
+  return withOwnership(product, requester.userId);
 }
 
 export async function deleteProduct({
