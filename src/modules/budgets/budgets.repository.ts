@@ -1,15 +1,16 @@
 import { prisma } from '../../config/prisma';
 import type { Budget, Organization } from '../../generated/prisma/client';
 import type { Prisma } from '../../generated/prisma/client';
+import { getKstDate } from '../../utils/date';
 
 //이번달 Budget 데이터 가져오기
 // Budget에서 startingBudget, spentAmount (currentMonthBudget, currentMonthSpending)
 export async function findCurrentMonthBudget(
   organizationId: number,
 ): Promise<Budget | null> {
-  const today = new Date();
-  const thisYear = today.getFullYear();
-  const thisMonth = today.getMonth() + 1;
+  const today = getKstDate();
+  const thisYear = today.year();
+  const thisMonth = today.month() + 1;
 
   return await prisma.budget.findUnique({
     where: {
@@ -27,10 +28,10 @@ export async function findCurrentMonthBudget(
 export async function findPreviousMonthBudget(
   organizationId: number,
 ): Promise<Budget | null> {
-  const today = new Date();
-  const previousDate = new Date(today.getFullYear(), today.getMonth() - 1);
-  const previousYear = previousDate.getFullYear();
-  const previousMonth = previousDate.getMonth() + 1;
+  const today = getKstDate();
+  const previousDate = today.subtract(1, 'month');
+  const previousYear = previousDate.year();
+  const previousMonth = previousDate.month() + 1;
 
   return await prisma.budget.findUnique({
     where: {
@@ -48,8 +49,8 @@ export async function findPreviousMonthBudget(
 export async function findCurrentYearSpending(
   organizationId: number,
 ): Promise<number> {
-  const today = new Date();
-  const thisYear = today.getFullYear();
+  const today = getKstDate();
+  const thisYear = today.year();
 
   const budget = await prisma.budget.aggregate({
     where: {
@@ -69,8 +70,8 @@ export async function findCurrentYearSpending(
 export async function findPreviousYearSpending(
   organizationId: number,
 ): Promise<number> {
-  const today = new Date();
-  const previousYear = today.getFullYear() - 1;
+  const today = getKstDate();
+  const previousYear = today.year() - 1;
 
   const budget = await prisma.budget.aggregate({
     where: {
@@ -110,9 +111,9 @@ export async function updateStartingBudget(
   organizationId: number,
   startingBudget: number,
 ): Promise<Budget> {
-  const today = new Date();
-  const thisYear = today.getFullYear();
-  const thisMonth = today.getMonth() + 1;
+  const today = getKstDate();
+  const thisYear = today.year();
+  const thisMonth = today.month() + 1;
 
   return tx.budget.update({
     where: {
