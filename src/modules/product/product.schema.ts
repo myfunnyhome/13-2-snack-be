@@ -28,6 +28,22 @@ function nullableUrlSchema(message: string) {
     .transform((value) => (value === '' ? null : value));
 }
 
+// 업로드한 이미지는 우리 이미지 API 경로(`/api/images/...`)로 오고 외부 URL이 아니다.
+// 외부 이미지 주소도 아직 허용해야 해서 절대 URL과 내부 경로를 둘 다 받는다.
+function nullableImageUrlSchema(message: string) {
+  return z
+    .preprocess(
+      (value) => (typeof value === 'string' ? value.trim() : value),
+      z.union([
+        z.literal(''),
+        z.null(),
+        z.string().regex(/^\/[^\s]*$/, { error: message }),
+        z.url({ error: message }),
+      ]),
+    )
+    .transform((value) => (value === '' ? null : value));
+}
+
 export const productIdParamsSchema = z.object({
   id: z.coerce
     .number({ error: '올바른 상품 ID가 아닙니다.' })
@@ -100,7 +116,8 @@ export const createProductSchema = z.object(
       .int({ error: '올바른 카테고리 ID가 아닙니다.' })
       .positive({ error: '올바른 카테고리 ID가 아닙니다.' }),
 
-    imageUrl: nullableUrlSchema('올바른 이미지 URL이 아닙니다.').optional(),
+    imageUrl:
+      nullableImageUrlSchema('올바른 이미지 주소가 아닙니다.').optional(),
 
     // 관리자가 실제 구매할 외부 판매처 링크
     productUrl: nullableUrlSchema('올바른 상품 URL이 아닙니다.').optional(),
