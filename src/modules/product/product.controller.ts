@@ -44,7 +44,7 @@ export async function getMyProducts(
 export async function getProduct(req: Request, res: Response): Promise<void> {
   const { id } = productIdParamsSchema.parse(req.params);
 
-  const result = await productService.getProduct(id, req.auth!.organizationId);
+  const result = await productService.getProduct(id, req.auth!);
 
   res.status(200).json({
     success: true,
