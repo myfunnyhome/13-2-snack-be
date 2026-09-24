@@ -362,6 +362,47 @@ async function main() {
     })),
   });
 
+  // 위 상품은 전부 관리자가 등록한 것이라, 일반 회원으로 로그인하면
+  // "상품 등록 내역"이 비어 보인다. 그 화면을 확인할 수 있게 일반 회원 상품을 따로 넣는다.
+  await prisma.product.createMany({
+    data: [
+      {
+        name: '츄파춥스',
+        price: 500,
+        categoryId: DEMO_CATEGORY.snack,
+        createdById: user.id,
+      },
+      {
+        name: '웰치스 포도',
+        price: 1600,
+        categoryId: DEMO_CATEGORY.juice,
+        createdById: user.id,
+      },
+      {
+        name: '아몬드 브리즈',
+        price: 2400,
+        categoryId: DEMO_CATEGORY.milk,
+        createdById: user.id,
+      },
+      {
+        name: '몽쉘',
+        price: 4200,
+        categoryId: DEMO_CATEGORY.pie,
+        createdById: user.id,
+      },
+      {
+        name: '포카리스웨트',
+        price: 1300,
+        categoryId: DEMO_CATEGORY.soda,
+        createdById: extraUsers[0].id,
+      },
+    ].map((product) => ({
+      ...product,
+      productUrl: 'https://www.example.com/products/member',
+      organizationId: organization.id,
+    })),
+  });
+
   await prisma.invitation.createMany({
     data: Array.from({ length: 10 }, (_, i) => ({
       email: `newhire${String(i + 1).padStart(2, '0')}@snack.com`,
