@@ -17,6 +17,10 @@ const DEMO_PASSWORD = 'Password123!';
 // 카테고리 id를 고정으로 넣으므로 시퀀스를 그 위에서 다시 시작한다.
 const CATEGORY_ID_SEQUENCE_START = 200;
 
+// 시드 상품 이미지는 프론트 public 폴더에 있는 파일을 가리킨다.
+// S3에 올린 이미지(`/api/images/...`)와 달리 AWS 설정 없이도 팀원 모두에게 보인다.
+const SEED_IMAGE_BASE = '/images/products';
+
 // 주문·장바구니 시나리오용 데모 상품이 쓰는 소분류 id (prisma/seedCatalog.ts 기준)
 const DEMO_CATEGORY = {
   snack: 101, // 과자
@@ -277,75 +281,97 @@ async function main() {
     ),
   );
 
+  // 주문·장바구니 시나리오용 데모 상품.
+  // imageUrl은 카탈로그에 같은 상품이 있을 때만 그 사진을 쓴다.
+  // 사진이 없는 상품을 일부러 남겨서 승인 모달의 placeholder 표시도 같이 확인할 수 있다.
+  const extraProductSeeds: {
+    name: string;
+    price: number;
+    slug: string;
+    categoryId: number;
+    imageUrl: string | null;
+  }[] = [
+    {
+      name: '마이구미',
+      price: 1800,
+      slug: 'mygummi',
+      categoryId: DEMO_CATEGORY.jelly,
+      imageUrl: null,
+    },
+    {
+      name: '하리보',
+      price: 2200,
+      slug: 'haribo',
+      categoryId: DEMO_CATEGORY.jelly,
+      imageUrl: null,
+    },
+    {
+      name: '허니버터아몬드',
+      price: 3500,
+      slug: 'honey-almond',
+      categoryId: DEMO_CATEGORY.nuts,
+      imageUrl: null,
+    },
+    {
+      name: '다이제',
+      price: 2800,
+      slug: 'digestive',
+      categoryId: DEMO_CATEGORY.biscuit,
+      imageUrl: null,
+    },
+    {
+      name: '후렌치파이',
+      price: 3200,
+      slug: 'french-pie',
+      categoryId: DEMO_CATEGORY.pie,
+      imageUrl: `${SEED_IMAGE_BASE}/09.webp`,
+    },
+    {
+      name: '녹차',
+      price: 1500,
+      slug: 'green-tea',
+      categoryId: DEMO_CATEGORY.tea,
+      imageUrl: `${SEED_IMAGE_BASE}/28.webp`,
+    },
+    {
+      name: '오렌지주스',
+      price: 2500,
+      slug: 'orange-juice',
+      categoryId: DEMO_CATEGORY.juice,
+      imageUrl: `${SEED_IMAGE_BASE}/20.webp`,
+    },
+    {
+      name: '바나나우유',
+      price: 1800,
+      slug: 'banana-milk',
+      categoryId: DEMO_CATEGORY.milk,
+      imageUrl: null,
+    },
+    {
+      name: '핫식스',
+      price: 2000,
+      slug: 'hotsix',
+      categoryId: DEMO_CATEGORY.energyDrink,
+      imageUrl: `${SEED_IMAGE_BASE}/23.webp`,
+    },
+    {
+      name: '삼다수',
+      price: 1000,
+      slug: 'samdasoo',
+      categoryId: DEMO_CATEGORY.water,
+      imageUrl: `${SEED_IMAGE_BASE}/32.webp`,
+    },
+  ];
+
   const extraProducts = await Promise.all(
-    [
-      {
-        name: '마이구미',
-        price: 1800,
-        slug: 'mygummi',
-        categoryId: DEMO_CATEGORY.jelly,
-      },
-      {
-        name: '하리보',
-        price: 2200,
-        slug: 'haribo',
-        categoryId: DEMO_CATEGORY.jelly,
-      },
-      {
-        name: '허니버터아몬드',
-        price: 3500,
-        slug: 'honey-almond',
-        categoryId: DEMO_CATEGORY.nuts,
-      },
-      {
-        name: '다이제',
-        price: 2800,
-        slug: 'digestive',
-        categoryId: DEMO_CATEGORY.biscuit,
-      },
-      {
-        name: '후렌치파이',
-        price: 3200,
-        slug: 'french-pie',
-        categoryId: DEMO_CATEGORY.pie,
-      },
-      {
-        name: '녹차',
-        price: 1500,
-        slug: 'green-tea',
-        categoryId: DEMO_CATEGORY.tea,
-      },
-      {
-        name: '오렌지주스',
-        price: 2500,
-        slug: 'orange-juice',
-        categoryId: DEMO_CATEGORY.juice,
-      },
-      {
-        name: '바나나우유',
-        price: 1800,
-        slug: 'banana-milk',
-        categoryId: DEMO_CATEGORY.milk,
-      },
-      {
-        name: '핫식스',
-        price: 2000,
-        slug: 'hotsix',
-        categoryId: DEMO_CATEGORY.energyDrink,
-      },
-      {
-        name: '삼다수',
-        price: 1000,
-        slug: 'samdasoo',
-        categoryId: DEMO_CATEGORY.water,
-      },
-    ].map((item) =>
+    extraProductSeeds.map((item) =>
       prisma.product.create({
         data: {
           name: item.name,
           price: item.price,
           productUrl: `https://www.example.com/products/${item.slug}`,
           categoryId: item.categoryId,
+          imageUrl: item.imageUrl,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -354,6 +380,7 @@ async function main() {
   );
 
   // 공식 시드 상품. 목록 정렬·무한 스크롤 QA에 쓸 카탈로그다.
+  // 사진은 seedCatalog에 상품별로 들어 있고, 사진이 없는 상품은 null이다.
   await prisma.product.createMany({
     data: SEED_PRODUCTS.map((product) => ({
       ...product,
@@ -364,41 +391,52 @@ async function main() {
 
   // 위 상품은 전부 관리자가 등록한 것이라, 일반 회원으로 로그인하면
   // "상품 등록 내역"이 비어 보인다. 그 화면을 확인할 수 있게 일반 회원 상품을 따로 넣는다.
+  // 이미지가 있는 상품으로 골라서, 목록·상세에서 사진이 보이는지도 같이 확인할 수 있게 한다.
   await prisma.product.createMany({
     data: [
       {
-        name: '츄파춥스',
-        price: 500,
-        categoryId: DEMO_CATEGORY.snack,
+        name: '코카콜라 350ml',
+        price: 2000,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/cola.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891011',
         createdById: user.id,
       },
       {
-        name: '웰치스 포도',
-        price: 1600,
+        name: '코카콜라 제로 350ml',
+        price: 2000,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/cola_zero.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891012',
+        createdById: user.id,
+      },
+      {
+        name: '환타 오렌지 350ml',
+        price: 1800,
         categoryId: DEMO_CATEGORY.juice,
+        imageUrl: `${SEED_IMAGE_BASE}/fanta.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891013',
         createdById: user.id,
       },
       {
-        name: '아몬드 브리즈',
-        price: 2400,
-        categoryId: DEMO_CATEGORY.milk,
+        name: '스프라이트 350ml',
+        price: 1900,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/sprite.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891014',
         createdById: user.id,
       },
+      // 이미지 없는 상품도 하나 남겨서 placeholder 표시를 확인할 수 있게 한다.
       {
-        name: '몽쉘',
-        price: 4200,
-        categoryId: DEMO_CATEGORY.pie,
-        createdById: user.id,
-      },
-      {
-        name: '포카리스웨트',
+        name: '포카리스웨트 500ml',
         price: 1300,
         categoryId: DEMO_CATEGORY.soda,
+        imageUrl: null,
+        productUrl: 'https://www.coupang.com/vp/products/7891015',
         createdById: extraUsers[0].id,
       },
     ].map((product) => ({
       ...product,
-      productUrl: 'https://www.example.com/products/member',
       organizationId: organization.id,
     })),
   });
@@ -423,11 +461,15 @@ async function main() {
       { userId: user.id, productId: pepero.id, quantity: 1 }, // 4: quantity=0 테스트용
       { userId: admin.id, productId: cola.id, quantity: 10 }, // 5: 즉시구매 정상용
       { userId: admin.id, productId: americano.id, quantity: 20 }, // 6: 즉시구매 예산초과용
-      ...extraUsers.map((extraUser, i) => ({
-        userId: extraUser.id,
-        productId: extraProducts[i].id,
-        quantity: (i % 3) + 1,
-      })),
+      // 팀원마다 서로 다른 상품 2~3개를 담아 둔다.
+      // 한 상품의 수량만 늘리면 다품목 장바구니를 확인할 수 없어서 상품 자체를 여러 개로 둔다.
+      ...extraUsers.flatMap((extraUser, i) =>
+        Array.from({ length: (i % 2) + 2 }, (_, offset) => ({
+          userId: extraUser.id,
+          productId: extraProducts[(i + offset) % extraProducts.length].id,
+          quantity: offset + 1,
+        })),
+      ),
     ],
   });
 
@@ -581,19 +623,32 @@ async function main() {
   ];
 
   for (let i = 0; i < extraUsers.length; i += 1) {
-    const extraProduct = extraProducts[i];
-    const quantity = (i % 3) + 1;
     const status = extraOrderStatuses[i];
     const isApproved = status === OrderStatus.APPROVED;
     const isRejected = status === OrderStatus.REJECTED;
-    const itemSum = extraProduct.price * quantity;
+
+    // 주문 하나에 서로 다른 상품 2~4개를 담는다.
+    // 한 상품의 수량만 늘리면 목록의 `외 N건` 표기와 승인 모달의 품목 리스트를 확인할 수 없다.
+    const orderProducts = Array.from(
+      { length: (i % 3) + 2 },
+      (_, offset) => extraProducts[(i + offset) % extraProducts.length],
+    );
+    const orderItems = orderProducts.map((orderProduct, offset) => ({
+      productId: orderProduct.id,
+      quantity: offset + 1,
+      priceAtOrder: orderProduct.price,
+    }));
+    const itemSum = orderItems.reduce(
+      (sum, item) => sum + item.priceAtOrder * item.quantity,
+      0,
+    );
 
     await prisma.order.create({
       data: {
         status,
         totalPrice: orderTotal(itemSum),
         deliveryFee: DELIVERY_FEE,
-        requestMessage: `${extraProduct.name} 구매 요청합니다.`,
+        requestMessage: `${orderProducts[0].name} 외 ${orderProducts.length - 1}건 구매 요청합니다.`,
         responseMessage: isApproved
           ? '승인합니다.'
           : isRejected
@@ -603,22 +658,18 @@ async function main() {
         requesterId: extraUsers[i].id,
         handlerId: isApproved || isRejected ? admin.id : undefined,
         items: {
-          create: [
-            {
-              productId: extraProduct.id,
-              quantity,
-              priceAtOrder: extraProduct.price,
-            },
-          ],
+          create: orderItems,
         },
       },
     });
 
     if (isApproved) {
-      await prisma.product.update({
-        where: { id: extraProduct.id },
-        data: { purchaseCount: { increment: quantity } },
-      });
+      for (const item of orderItems) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { purchaseCount: { increment: item.quantity } },
+        });
+      }
     }
   }
 

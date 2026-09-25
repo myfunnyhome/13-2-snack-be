@@ -219,5 +219,50 @@ Content-Type: application/json
   ]
 }
 
-### 25. 시드 초기화 안내
+### --- 다품목 구매 요청 (한 주문에 서로 다른 상품 여러 개) ---
+# 목록의 `외 N건` 표기와 승인 모달의 품목 리스트를 확인할 때 쓴다.
+# 위 시나리오에서 cartItemId 1~4를 이미 소진했다면 npm run seed 후 25-1부터 진행한다.
+
+### 25-1. GENERAL 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "user@snack.com",
+  "password": "Password123!"
+}
+
+### 25-2. 다품목 구매 요청 생성 (새우깡 + 초코파이 + 홈런볼)
+# @name createMultiItem
+POST {{baseUrl}}/orders
+Content-Type: application/json
+
+{
+  "items": [
+    { "cartItemId": 1, "quantity": 2 },
+    { "cartItemId": 2, "quantity": 1 },
+    { "cartItemId": 3, "quantity": 3 }
+  ],
+  "requestMessage": "다과 회의용으로 여러 종류 부탁드립니다."
+}
+
+### 25-3. 내 상세 조회 (items에 상품 3개가 모두 담겨 있어야 한다)
+GET {{baseUrl}}/me/orders/{{createMultiItem.response.body.data.id}}
+
+### 25-4. ADMIN 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@snack.com",
+  "password": "Password123!"
+}
+
+### 25-5. 관리자 목록 (totalItemCount=3, representativeProductName은 대표 1개만)
+GET {{baseUrl}}/admin/orders?status=PENDING&sort=latest&page=1&limit=6
+
+### 25-6. 관리자 상세 (승인 모달이 쓰는 응답. items 3개 + itemsTotal/deliveryFee/totalPrice)
+GET {{baseUrl}}/admin/orders/{{createMultiItem.response.body.data.id}}
+
+### 26. 시드 초기화 안내
 # 이 파일로 테스트 후 터미널에서 npm run seed 실행
