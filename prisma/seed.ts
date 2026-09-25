@@ -17,6 +17,10 @@ const DEMO_PASSWORD = 'Password123!';
 // 카테고리 id를 고정으로 넣으므로 시퀀스를 그 위에서 다시 시작한다.
 const CATEGORY_ID_SEQUENCE_START = 200;
 
+// 시드 상품 이미지는 프론트 public 폴더에 있는 파일을 가리킨다.
+// S3에 올린 이미지(`/api/images/...`)와 달리 AWS 설정 없이도 팀원 모두에게 보인다.
+const SEED_IMAGE_BASE = '/images/products';
+
 // 주문·장바구니 시나리오용 데모 상품이 쓰는 소분류 id (prisma/seedCatalog.ts 기준)
 const DEMO_CATEGORY = {
   snack: 101, // 과자
@@ -354,6 +358,7 @@ async function main() {
   );
 
   // 공식 시드 상품. 목록 정렬·무한 스크롤 QA에 쓸 카탈로그다.
+  // 사진은 seedCatalog에 상품별로 들어 있고, 사진이 없는 상품은 null이다.
   await prisma.product.createMany({
     data: SEED_PRODUCTS.map((product) => ({
       ...product,
@@ -364,41 +369,52 @@ async function main() {
 
   // 위 상품은 전부 관리자가 등록한 것이라, 일반 회원으로 로그인하면
   // "상품 등록 내역"이 비어 보인다. 그 화면을 확인할 수 있게 일반 회원 상품을 따로 넣는다.
+  // 이미지가 있는 상품으로 골라서, 목록·상세에서 사진이 보이는지도 같이 확인할 수 있게 한다.
   await prisma.product.createMany({
     data: [
       {
-        name: '츄파춥스',
-        price: 500,
-        categoryId: DEMO_CATEGORY.snack,
+        name: '코카콜라 350ml',
+        price: 2000,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/cola.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891011',
         createdById: user.id,
       },
       {
-        name: '웰치스 포도',
-        price: 1600,
+        name: '코카콜라 제로 350ml',
+        price: 2000,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/cola_zero.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891012',
+        createdById: user.id,
+      },
+      {
+        name: '환타 오렌지 350ml',
+        price: 1800,
         categoryId: DEMO_CATEGORY.juice,
+        imageUrl: `${SEED_IMAGE_BASE}/fanta.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891013',
         createdById: user.id,
       },
       {
-        name: '아몬드 브리즈',
-        price: 2400,
-        categoryId: DEMO_CATEGORY.milk,
+        name: '스프라이트 350ml',
+        price: 1900,
+        categoryId: DEMO_CATEGORY.soda,
+        imageUrl: `${SEED_IMAGE_BASE}/sprite.webp`,
+        productUrl: 'https://www.coupang.com/vp/products/7891014',
         createdById: user.id,
       },
+      // 이미지 없는 상품도 하나 남겨서 placeholder 표시를 확인할 수 있게 한다.
       {
-        name: '몽쉘',
-        price: 4200,
-        categoryId: DEMO_CATEGORY.pie,
-        createdById: user.id,
-      },
-      {
-        name: '포카리스웨트',
+        name: '포카리스웨트 500ml',
         price: 1300,
         categoryId: DEMO_CATEGORY.soda,
+        imageUrl: null,
+        productUrl: 'https://www.coupang.com/vp/products/7891015',
         createdById: extraUsers[0].id,
       },
     ].map((product) => ({
       ...product,
-      productUrl: 'https://www.example.com/products/member',
       organizationId: organization.id,
     })),
   });
