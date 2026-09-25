@@ -281,75 +281,97 @@ async function main() {
     ),
   );
 
+  // 주문·장바구니 시나리오용 데모 상품.
+  // imageUrl은 카탈로그에 같은 상품이 있을 때만 그 사진을 쓴다.
+  // 사진이 없는 상품을 일부러 남겨서 승인 모달의 placeholder 표시도 같이 확인할 수 있다.
+  const extraProductSeeds: {
+    name: string;
+    price: number;
+    slug: string;
+    categoryId: number;
+    imageUrl: string | null;
+  }[] = [
+    {
+      name: '마이구미',
+      price: 1800,
+      slug: 'mygummi',
+      categoryId: DEMO_CATEGORY.jelly,
+      imageUrl: null,
+    },
+    {
+      name: '하리보',
+      price: 2200,
+      slug: 'haribo',
+      categoryId: DEMO_CATEGORY.jelly,
+      imageUrl: null,
+    },
+    {
+      name: '허니버터아몬드',
+      price: 3500,
+      slug: 'honey-almond',
+      categoryId: DEMO_CATEGORY.nuts,
+      imageUrl: null,
+    },
+    {
+      name: '다이제',
+      price: 2800,
+      slug: 'digestive',
+      categoryId: DEMO_CATEGORY.biscuit,
+      imageUrl: null,
+    },
+    {
+      name: '후렌치파이',
+      price: 3200,
+      slug: 'french-pie',
+      categoryId: DEMO_CATEGORY.pie,
+      imageUrl: `${SEED_IMAGE_BASE}/09.webp`,
+    },
+    {
+      name: '녹차',
+      price: 1500,
+      slug: 'green-tea',
+      categoryId: DEMO_CATEGORY.tea,
+      imageUrl: `${SEED_IMAGE_BASE}/28.webp`,
+    },
+    {
+      name: '오렌지주스',
+      price: 2500,
+      slug: 'orange-juice',
+      categoryId: DEMO_CATEGORY.juice,
+      imageUrl: `${SEED_IMAGE_BASE}/20.webp`,
+    },
+    {
+      name: '바나나우유',
+      price: 1800,
+      slug: 'banana-milk',
+      categoryId: DEMO_CATEGORY.milk,
+      imageUrl: null,
+    },
+    {
+      name: '핫식스',
+      price: 2000,
+      slug: 'hotsix',
+      categoryId: DEMO_CATEGORY.energyDrink,
+      imageUrl: `${SEED_IMAGE_BASE}/23.webp`,
+    },
+    {
+      name: '삼다수',
+      price: 1000,
+      slug: 'samdasoo',
+      categoryId: DEMO_CATEGORY.water,
+      imageUrl: `${SEED_IMAGE_BASE}/32.webp`,
+    },
+  ];
+
   const extraProducts = await Promise.all(
-    [
-      {
-        name: '마이구미',
-        price: 1800,
-        slug: 'mygummi',
-        categoryId: DEMO_CATEGORY.jelly,
-      },
-      {
-        name: '하리보',
-        price: 2200,
-        slug: 'haribo',
-        categoryId: DEMO_CATEGORY.jelly,
-      },
-      {
-        name: '허니버터아몬드',
-        price: 3500,
-        slug: 'honey-almond',
-        categoryId: DEMO_CATEGORY.nuts,
-      },
-      {
-        name: '다이제',
-        price: 2800,
-        slug: 'digestive',
-        categoryId: DEMO_CATEGORY.biscuit,
-      },
-      {
-        name: '후렌치파이',
-        price: 3200,
-        slug: 'french-pie',
-        categoryId: DEMO_CATEGORY.pie,
-      },
-      {
-        name: '녹차',
-        price: 1500,
-        slug: 'green-tea',
-        categoryId: DEMO_CATEGORY.tea,
-      },
-      {
-        name: '오렌지주스',
-        price: 2500,
-        slug: 'orange-juice',
-        categoryId: DEMO_CATEGORY.juice,
-      },
-      {
-        name: '바나나우유',
-        price: 1800,
-        slug: 'banana-milk',
-        categoryId: DEMO_CATEGORY.milk,
-      },
-      {
-        name: '핫식스',
-        price: 2000,
-        slug: 'hotsix',
-        categoryId: DEMO_CATEGORY.energyDrink,
-      },
-      {
-        name: '삼다수',
-        price: 1000,
-        slug: 'samdasoo',
-        categoryId: DEMO_CATEGORY.water,
-      },
-    ].map((item) =>
+    extraProductSeeds.map((item) =>
       prisma.product.create({
         data: {
           name: item.name,
           price: item.price,
           productUrl: `https://www.example.com/products/${item.slug}`,
           categoryId: item.categoryId,
+          imageUrl: item.imageUrl,
           createdById: admin.id,
           organizationId: organization.id,
         },
@@ -439,11 +461,15 @@ async function main() {
       { userId: user.id, productId: pepero.id, quantity: 1 }, // 4: quantity=0 테스트용
       { userId: admin.id, productId: cola.id, quantity: 10 }, // 5: 즉시구매 정상용
       { userId: admin.id, productId: americano.id, quantity: 20 }, // 6: 즉시구매 예산초과용
-      ...extraUsers.map((extraUser, i) => ({
-        userId: extraUser.id,
-        productId: extraProducts[i].id,
-        quantity: (i % 3) + 1,
-      })),
+      // 팀원마다 서로 다른 상품 2~3개를 담아 둔다.
+      // 한 상품의 수량만 늘리면 다품목 장바구니를 확인할 수 없어서 상품 자체를 여러 개로 둔다.
+      ...extraUsers.flatMap((extraUser, i) =>
+        Array.from({ length: (i % 2) + 2 }, (_, offset) => ({
+          userId: extraUser.id,
+          productId: extraProducts[(i + offset) % extraProducts.length].id,
+          quantity: offset + 1,
+        })),
+      ),
     ],
   });
 
@@ -597,19 +623,32 @@ async function main() {
   ];
 
   for (let i = 0; i < extraUsers.length; i += 1) {
-    const extraProduct = extraProducts[i];
-    const quantity = (i % 3) + 1;
     const status = extraOrderStatuses[i];
     const isApproved = status === OrderStatus.APPROVED;
     const isRejected = status === OrderStatus.REJECTED;
-    const itemSum = extraProduct.price * quantity;
+
+    // 주문 하나에 서로 다른 상품 2~4개를 담는다.
+    // 한 상품의 수량만 늘리면 목록의 `외 N건` 표기와 승인 모달의 품목 리스트를 확인할 수 없다.
+    const orderProducts = Array.from(
+      { length: (i % 3) + 2 },
+      (_, offset) => extraProducts[(i + offset) % extraProducts.length],
+    );
+    const orderItems = orderProducts.map((orderProduct, offset) => ({
+      productId: orderProduct.id,
+      quantity: offset + 1,
+      priceAtOrder: orderProduct.price,
+    }));
+    const itemSum = orderItems.reduce(
+      (sum, item) => sum + item.priceAtOrder * item.quantity,
+      0,
+    );
 
     await prisma.order.create({
       data: {
         status,
         totalPrice: orderTotal(itemSum),
         deliveryFee: DELIVERY_FEE,
-        requestMessage: `${extraProduct.name} 구매 요청합니다.`,
+        requestMessage: `${orderProducts[0].name} 외 ${orderProducts.length - 1}건 구매 요청합니다.`,
         responseMessage: isApproved
           ? '승인합니다.'
           : isRejected
@@ -619,22 +658,18 @@ async function main() {
         requesterId: extraUsers[i].id,
         handlerId: isApproved || isRejected ? admin.id : undefined,
         items: {
-          create: [
-            {
-              productId: extraProduct.id,
-              quantity,
-              priceAtOrder: extraProduct.price,
-            },
-          ],
+          create: orderItems,
         },
       },
     });
 
     if (isApproved) {
-      await prisma.product.update({
-        where: { id: extraProduct.id },
-        data: { purchaseCount: { increment: quantity } },
-      });
+      for (const item of orderItems) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { purchaseCount: { increment: item.quantity } },
+        });
+      }
     }
   }
 
