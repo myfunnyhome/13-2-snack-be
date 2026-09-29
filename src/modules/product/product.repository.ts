@@ -28,6 +28,12 @@ type CreateData = {
 // 등록자와 소속 조직은 등록 시점에 정해지고 수정으로 바꿀 수 없다.
 type UpdateData = Partial<Omit<CreateData, 'createdById' | 'organizationId'>>;
 
+// 찜한 사람 수. 상품 카드와 상세에 좋아요 개수로 보여준다.
+// WishlistItem은 (userId, productId) 유일이라 행 수가 곧 사람 수다.
+const wishlistCountSelect = {
+  _count: { select: { wishlistItems: true } },
+} satisfies Prisma.ProductSelect;
+
 const productListArgs = {
   select: {
     id: true,
@@ -39,10 +45,11 @@ const productListArgs = {
     purchaseCount: true,
     createdAt: true,
     category: { select: { id: true, name: true, parentId: true } },
+    ...wishlistCountSelect,
   },
 } satisfies Prisma.ProductDefaultArgs;
 
-export type ProductListItem = Prisma.ProductGetPayload<typeof productListArgs>;
+type ProductListRow = Prisma.ProductGetPayload<typeof productListArgs>;
 
 const productDetailArgs = {
   select: {
@@ -56,10 +63,28 @@ const productDetailArgs = {
     updatedAt: true,
     category: { select: { id: true, name: true, parentId: true } },
     createdBy: { select: { id: true, name: true } },
+    ...wishlistCountSelect,
   },
 } satisfies Prisma.ProductDefaultArgs;
 
-export type ProductDetail = Prisma.ProductGetPayload<typeof productDetailArgs>;
+type ProductDetailRow = Prisma.ProductGetPayload<typeof productDetailArgs>;
+
+// `_count.wishlistItems`는 응답에 그대로 두기 어색해서 wishlistCount로 펴서 내보낸다.
+export type ProductListItem = Omit<ProductListRow, '_count'> & {
+  wishlistCount: number;
+};
+
+export type ProductDetail = Omit<ProductDetailRow, '_count'> & {
+  wishlistCount: number;
+};
+
+function toListItem({ _count, ...product }: ProductListRow): ProductListItem {
+  return { ...product, wishlistCount: _count.wishlistItems };
+}
+
+function toDetail({ _count, ...product }: ProductDetailRow): ProductDetail {
+  return { ...product, wishlistCount: _count.wishlistItems };
+}
 
 const productOwnerArgs = {
   select: { id: true, createdById: true },
@@ -106,7 +131,7 @@ function buildWhere({
   };
 }
 
-export function findMany({
+export async function findMany({
   organizationId,
   createdById,
   keyword,
@@ -124,7 +149,7 @@ export function findMany({
     parentCategoryId,
   });
 
-  return Promise.all([
+  const [rows, totalCount] = await Promise.all([
     prisma.product.findMany({
       where,
       select: productListArgs.select,
@@ -134,16 +159,20 @@ export function findMany({
     }),
     prisma.product.count({ where }),
   ]);
+
+  return [rows.map(toListItem), totalCount];
 }
 
-export function findDetailById(
+export async function findDetailById(
   productId: number,
   organizationId: number,
 ): Promise<ProductDetail | null> {
-  return prisma.product.findFirst({
+  const product = await prisma.product.findFirst({
     where: { id: productId, isDeleted: false, organizationId },
     select: productDetailArgs.select,
   });
+
+  return product && toDetail(product);
 }
 
 export function findOwnerById(
@@ -166,22 +195,26 @@ export function findCategoryById(
   });
 }
 
-export function create(data: CreateData): Promise<ProductDetail> {
-  return prisma.product.create({
+export async function create(data: CreateData): Promise<ProductDetail> {
+  const product = await prisma.product.create({
     data,
     select: productDetailArgs.select,
   });
+
+  return toDetail(product);
 }
 
-export function update(
+export async function update(
   productId: number,
   data: UpdateData,
 ): Promise<ProductDetail> {
-  return prisma.product.update({
+  const product = await prisma.product.update({
     where: { id: productId },
     data,
     select: productDetailArgs.select,
   });
+
+  return toDetail(product);
 }
 
 export function softDelete(productId: number): Promise<{ id: number }> {
