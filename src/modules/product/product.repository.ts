@@ -34,6 +34,8 @@ const productListArgs = {
     name: true,
     price: true,
     imageUrl: true,
+    // 상품 등록 내역 화면이 "제품 링크" 열에 그대로 쓴다.
+    productUrl: true,
     purchaseCount: true,
     createdAt: true,
     category: { select: { id: true, name: true, parentId: true } },
