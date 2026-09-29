@@ -1,3 +1,5 @@
+import { create } from 'node:domain';
+
 import { prisma } from '../../config/prisma';
 import { BadRequestError, NotFoundError } from '../../types/errors';
 import * as budgetRepository from './budgets.repository';
@@ -73,4 +75,24 @@ export async function getBudgetSummary(
     previousYearSpending:
       await budgetRepository.findPreviousYearSpending(organizationId),
   };
+}
+
+//매달 Budget 데이터 생성
+export async function createBudget(organizationId: number) {
+  const defaultBudget =
+    await budgetRepository.findDefaultBudget(organizationId);
+  if (defaultBudget === null) {
+    throw new NotFoundError('defaultBudget 데이터를 찾을 수 없었습니다.');
+  }
+
+  return await budgetRepository.createBudget(defaultBudget, organizationId);
+}
+
+// 매달 모든 Organization의 Budget 생성
+export async function createMonthlyBudgets(): Promise<void> {
+  const organizationIds = await budgetRepository.findAllOrganizationIds();
+
+  for (const organizationId of organizationIds) {
+    await createBudget(organizationId);
+  }
 }
