@@ -1,5 +1,3 @@
-import { create } from 'node:domain';
-
 import { prisma } from '../../config/prisma';
 import { BadRequestError, NotFoundError } from '../../types/errors';
 import * as budgetRepository from './budgets.repository';
@@ -91,8 +89,24 @@ export async function createBudget(organizationId: number) {
 // 매달 모든 Organization의 Budget 생성
 export async function createMonthlyBudgets(): Promise<void> {
   const organizationIds = await budgetRepository.findAllOrganizationIds();
+  const failedOrganizationIds: number[] = [];
 
   for (const organizationId of organizationIds) {
-    await createBudget(organizationId);
+    try {
+      await createBudget(organizationId);
+    } catch (error) {
+      failedOrganizationIds.push(organizationId);
+
+      console.error(
+        `Budget 생성 실패 - organizationId: ${organizationId}`,
+        error,
+      );
+    }
+  }
+
+  if (failedOrganizationIds.length > 0) {
+    throw new Error(
+      `Budget 생성 실패 조직: ${failedOrganizationIds.join(', ')}`,
+    );
   }
 }
