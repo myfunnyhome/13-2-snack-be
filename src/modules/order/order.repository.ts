@@ -1,5 +1,6 @@
 import { prisma } from '../../config/prisma';
 import { OrderStatus, Prisma } from '../../generated/prisma/client';
+import { getKstDate } from '../../utils/date';
 
 // ------------------------------
 // select/include 상수 + 타입 추론
@@ -28,6 +29,16 @@ const orderListItemArgs = {
 } satisfies Prisma.OrderDefaultArgs;
 
 export type OrderListItem = Prisma.OrderGetPayload<typeof orderListItemArgs>;
+
+// ------------------------------
+// 이번 달 Budget 기준 연/월 (KST)
+// ------------------------------
+
+// budget 크론/조회와 같은 KST 기준의 "이번 달" 연/월
+function getCurrentBudgetPeriod() {
+  const today = getKstDate();
+  return { year: today.year(), month: today.month() + 1 };
+}
 
 // ------------------------------
 // POST /orders 관련
@@ -107,13 +118,13 @@ export function createApprovedOrder(data: {
       });
     }
 
-    const now = new Date();
+    const { year, month } = getCurrentBudgetPeriod();
     await tx.budget.update({
       where: {
         organizationId_year_month: {
           organizationId: data.organizationId,
-          year: now.getFullYear(),
-          month: now.getMonth() + 1,
+          year,
+          month,
         },
       },
       data: { spentAmount: { increment: data.totalPrice } },
@@ -236,13 +247,13 @@ export function findOrgOrderById(id: number, orgId: number) {
 // ------------------------------
 
 export function findCurrentBudget(orgId: number) {
-  const now = new Date();
+  const { year, month } = getCurrentBudgetPeriod();
   return prisma.budget.findUnique({
     where: {
       organizationId_year_month: {
         organizationId: orgId,
-        year: now.getFullYear(),
-        month: now.getMonth() + 1,
+        year,
+        month,
       },
     },
   });
@@ -271,13 +282,13 @@ export function approveOrder(
       });
     }
 
-    const now = new Date();
+    const { year, month } = getCurrentBudgetPeriod();
     await tx.budget.update({
       where: {
         organizationId_year_month: {
           organizationId: orgId,
-          year: now.getFullYear(),
-          month: now.getMonth() + 1,
+          year,
+          month,
         },
       },
       data: { spentAmount: { increment: order.totalPrice } },
