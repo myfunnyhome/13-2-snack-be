@@ -1,6 +1,12 @@
 import { prisma } from '../../config/prisma';
 import { Prisma } from '../../generated/prisma/client';
+import { getKstDate } from '../../utils/date';
 import { hashToken } from '../../utils/token';
+
+// 가입 시 조직의 defaultBudget과 이번 달 Budget의 startingBudget에 함께 쓰는 초기값.
+// 크론이 만드는 Budget(startingBudget = 조직 defaultBudget)과 같은 값이 되도록
+// 두 필드가 항상 이 상수 하나에서 나오게 한다.
+const INITIAL_BUDGET = 0;
 
 type CreateSuperAdminParams = {
   name: string;
@@ -132,10 +138,14 @@ export function createSuperAdmin({
   organizationName,
   bizRegNumber,
 }: CreateSuperAdminParams): Promise<CreateSuperAdminResult> {
+  // 크론(budget.scheduler)이 만드는 Budget과 같은 KST 기준의 연/월
+  const today = getKstDate();
+
   return prisma.organization.create({
     data: {
       name: organizationName,
       bizRegNumber,
+      defaultBudget: INITIAL_BUDGET,
       users: {
         create: {
           name,
@@ -146,6 +156,14 @@ export function createSuperAdmin({
               password: passwordHash,
             },
           },
+        },
+      },
+      // 가입한 달에도 이번 달 Budget이 존재하도록 조직과 함께 생성
+      budgets: {
+        create: {
+          year: today.year(),
+          month: today.month() + 1,
+          startingBudget: INITIAL_BUDGET,
         },
       },
     },
