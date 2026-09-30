@@ -61,13 +61,13 @@ export async function getBudgetSummary(
   const previousMonthBudget =
     await budgetRepository.findPreviousMonthBudget(organizationId);
 
-  if (!currentMonthBudget || !previousMonthBudget) {
+  if (!currentMonthBudget) {
     throw new NotFoundError('예산 정보를 찾을 수 없었습니다.');
   }
 
   return {
-    currentMonthBudget: currentMonthBudget,
-    previousMonthBudget: previousMonthBudget,
+    currentMonthBudget,
+    previousMonthBudget,
     currentYearSpending:
       await budgetRepository.findCurrentYearSpending(organizationId),
     previousYearSpending:
