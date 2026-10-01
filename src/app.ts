@@ -1,7 +1,9 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
+import swaggerUi from 'swagger-ui-express';
 
+import swaggerSpec from './config/swagger';
 import errorHandler from './middlewares/errorHandler';
 import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
@@ -33,6 +35,8 @@ app.use('/products', productsRoutes);
 app.use('/me', meRoutes);
 app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 매칭되는 라우트가 없는 요청
 // 응답을 직접 만들지 않고 NotFoundError를 넘겨 errorHandler가 처리하게 한다.

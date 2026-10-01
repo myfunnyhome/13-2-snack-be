@@ -45,6 +45,11 @@ export async function create({
   organizationId,
   requesterId,
 }: CreateInvitationParams): Promise<CreateResult> {
+  // 이미 가입한 이메일이면 메일을 보내기 전에 막는다.
+  if (await userRepository.existsByEmail(email)) {
+    throw new ConflictError('이미 사용 중인 이메일입니다.');
+  }
+
   const inviter = await userRepository.findInviterInfo(requesterId);
 
   if (!inviter) {
@@ -65,6 +70,7 @@ export async function create({
     token,
   });
 
+  // 새 초대를 저장하면서 같은 이메일의 이전 초대를 만료시킨다.
   return invitationRepository.create({
     email,
     name,
