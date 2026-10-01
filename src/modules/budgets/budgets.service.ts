@@ -61,16 +61,52 @@ export async function getBudgetSummary(
   const previousMonthBudget =
     await budgetRepository.findPreviousMonthBudget(organizationId);
 
-  if (!currentMonthBudget || !previousMonthBudget) {
+  if (!currentMonthBudget) {
     throw new NotFoundError('예산 정보를 찾을 수 없었습니다.');
   }
 
   return {
-    currentMonthBudget: currentMonthBudget,
-    previousMonthBudget: previousMonthBudget,
+    currentMonthBudget,
+    previousMonthBudget,
     currentYearSpending:
       await budgetRepository.findCurrentYearSpending(organizationId),
     previousYearSpending:
       await budgetRepository.findPreviousYearSpending(organizationId),
   };
+}
+
+//매달 Budget 데이터 생성
+export async function createBudget(organizationId: number) {
+  const defaultBudget =
+    await budgetRepository.findDefaultBudget(organizationId);
+  if (defaultBudget === null) {
+    throw new NotFoundError('defaultBudget 데이터를 찾을 수 없었습니다.');
+  }
+
+  return await budgetRepository.createBudget(defaultBudget, organizationId);
+}
+
+// 매달 모든 Organization의 Budget 생성
+export async function createMonthlyBudgets(): Promise<void> {
+  const organizationIds = await budgetRepository.findAllOrganizationIds();
+  const failedOrganizationIds: number[] = [];
+
+  for (const organizationId of organizationIds) {
+    try {
+      await createBudget(organizationId);
+    } catch (error) {
+      failedOrganizationIds.push(organizationId);
+
+      console.error(
+        `Budget 생성 실패 - organizationId: ${organizationId}`,
+        error,
+      );
+    }
+  }
+
+  if (failedOrganizationIds.length > 0) {
+    throw new Error(
+      `Budget 생성 실패 조직: ${failedOrganizationIds.join(', ')}`,
+    );
+  }
 }

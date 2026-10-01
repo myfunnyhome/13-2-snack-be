@@ -151,3 +151,43 @@ export async function updateDefaultBudget(
 
   return organization.defaultBudget;
 }
+
+//모든 organization의 Id 구하기
+export async function findAllOrganizationIds(): Promise<number[]> {
+  const organizations = await prisma.organization.findMany({
+    select: {
+      id: true,
+    },
+  });
+
+  return organizations.map((organization) => organization.id);
+}
+
+//Organiztion의 defaultBudget 기반으로 새 Budget 데이터 생성
+export async function createBudget(
+  defaultBudget: number,
+  organizationId: number,
+): Promise<Budget> {
+  const today = getKstDate();
+  const year = today.year();
+  const month = today.month() + 1;
+
+  const budget = await prisma.budget.upsert({
+    where: {
+      organizationId_year_month: {
+        organizationId,
+        year,
+        month,
+      },
+    },
+    create: {
+      organizationId,
+      year,
+      month,
+      startingBudget: defaultBudget,
+    },
+    update: {},
+  });
+
+  return budget;
+}
