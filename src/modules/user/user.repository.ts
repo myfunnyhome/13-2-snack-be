@@ -176,3 +176,12 @@ export function findInviterInfo(
     select: findInviterInfoArgs.select,
   });
 }
+
+export async function existsByEmail(email: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  return user !== null;
+}

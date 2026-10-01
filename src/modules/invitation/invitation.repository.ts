@@ -56,6 +56,9 @@ export function findByToken(token: string): Promise<FindByTokenResult> {
   });
 }
 
+// 같은 조직이 같은 이메일로 보낸 아직 유효한 초대는 새 초대를 만들면서 함께 만료시킨다.
+// 재발송하면 이전 메일의 링크가 더 이상 쓰이지 않게 하기 위함이고,
+// 새 초대 생성과 이전 초대 만료는 하나의 트랜잭션으로 처리한다.
 export function create({
   email,
   name,
@@ -64,15 +67,29 @@ export function create({
   token,
   expiresAt,
 }: CreateInvitationData): Promise<CreateResult> {
-  return prisma.invitation.create({
-    data: {
-      email,
-      name,
-      role,
-      organizationId,
-      token,
-      expiresAt,
-    },
-    select: createArgs.select,
+  const now = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    await tx.invitation.updateMany({
+      where: {
+        email,
+        organizationId,
+        usedAt: null,
+        expiresAt: { gt: now },
+      },
+      data: { expiresAt: now },
+    });
+
+    return tx.invitation.create({
+      data: {
+        email,
+        name,
+        role,
+        organizationId,
+        token,
+        expiresAt,
+      },
+      select: createArgs.select,
+    });
   });
 }
