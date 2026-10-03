@@ -397,5 +397,3 @@
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-
-export {};

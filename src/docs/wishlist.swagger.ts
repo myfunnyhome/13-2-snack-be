@@ -242,5 +242,3 @@
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
-
-export {};

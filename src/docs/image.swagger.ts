@@ -135,5 +135,3 @@
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-
-export {};

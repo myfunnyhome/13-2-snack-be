@@ -440,5 +440,3 @@
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-
-export {};
