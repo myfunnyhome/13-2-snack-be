@@ -1,0 +1,99 @@
+@baseUrl = http://localhost:3001
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# user@snack.com     GENERAL (찜: 홈런볼=3, 아메리카노=6)
+# staff01@snack.com  GENERAL (같은 조직에서 소유권 없음 확인용)
+# admin@other-snack.com ADMIN (다른컴퍼니, 타 조직 차단 확인용)
+
+
+
+
+@homeRunBallId = 3
+@ameriranoId = 6
+@newProductId = 1
+@discontinuedProductId = 7
+@otherOrganizationProductId = 18
+
+### 1. 로그인 - 일반 유저
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "user@snack.com", "password": "Password123!" }
+
+### --- 목록 조회 ---
+
+### 2. 찜 목록 조회 (200 예상)
+# 홈런볼(3), 아메리카노(6)가 찜한 최신순으로 나와야 함
+# 각 item은 id, name, price, imageUrl, purchaseCount를 반환해야 함
+GET {{baseUrl}}/me/wishlist
+
+### 3. 찜 상품 ID 목록 조회 (200 예상)
+# 상품 상세 정보 없이 productIds 배열만 반환해야 함
+GET {{baseUrl}}/me/wishlist/ids
+
+### 4. 찜 목록 - limit 조합 (200 예상)
+GET {{baseUrl}}/me/wishlist?page=1&limit=1
+
+### --- 등록 ---
+
+### 5. 찜 등록 - 새 상품 (200 예상)
+POST {{baseUrl}}/me/wishlist/{{newProductId}}
+
+### 6. 등록 후 목록 조회 (200 예상)
+# 5번에서 등록한 상품이 최신순 맨 앞에 나와야 함
+GET {{baseUrl}}/me/wishlist
+
+### 7. 이미 찜한 상품 재등록 (200 예상, idempotent)
+POST {{baseUrl}}/me/wishlist/{{newProductId}}
+
+### 8. 존재하지 않는 상품 찜 등록 (404 예상)
+POST {{baseUrl}}/me/wishlist/99999
+
+### 9. 다른 회사 상품 찜 등록 (403 예상)
+POST {{baseUrl}}/me/wishlist/{{otherOrganizationProductId}}
+
+### 10. 단종 상품 찜 등록 (404 예상)
+POST {{baseUrl}}/me/wishlist/{{discontinuedProductId}}
+
+### 11. productId가 숫자가 아님 (400 예상)
+POST {{baseUrl}}/me/wishlist/abc
+
+### --- 해제(단건) ---
+
+### 12. 찜 해제 - 단건 (200 예상, deletedCount 1)
+DELETE {{baseUrl}}/me/wishlist/{{newProductId}}
+
+### 13. 찜 안 한 상품 해제 (200 예상, deletedCount 0, idempotent)
+DELETE {{baseUrl}}/me/wishlist/{{newProductId}}
+
+### --- 해제(배치) ---
+
+### 14. 찜 해제 - 배치 (200 예상)
+# deletedCount 2 예상 (홈런볼, 아메리카노)
+DELETE {{baseUrl}}/me/wishlist
+Content-Type: application/json
+
+{ "productIds": [{{homeRunBallId}}, {{ameriranoId}}] }
+
+### 15. 이미 지운 배치 재요청 (200 예상, deletedCount 0)
+DELETE {{baseUrl}}/me/wishlist
+Content-Type: application/json
+
+{ "productIds": [{{homeRunBallId}}, {{ameriranoId}}] }
+
+### 16. 배치 해제 - 빈 배열 (400 예상)
+DELETE {{baseUrl}}/me/wishlist
+Content-Type: application/json
+
+{ "productIds": [] }
+
+### --- 인증 ---
+
+### 17. 로그아웃
+POST {{baseUrl}}/auth/signout
+
+### 18. 쿠키 없이 목록 조회 (401 예상)
+GET {{baseUrl}}/me/wishlist
+
+### 19. 시드 초기화
+# 위 테스트로 찜 항목이 추가·삭제되었으므로 터미널에서 npm run seed 실행

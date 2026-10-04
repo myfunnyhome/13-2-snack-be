@@ -1,0 +1,118 @@
+@baseUrl = http://localhost:3001
+
+### 준비
+# - .env에 AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET_NAME,
+#   API_BASE=/api 가 있어야 합니다. 키 값은 이 파일이나 커밋에 절대 적지 마세요.
+# - S3는 프라이빗 버킷이라 이미지는 항상 GET /images/*key 로 백엔드를 거쳐서 받습니다.
+# - 이 파일은 백엔드(3001)를 직접 부르므로 주소에 /api가 없습니다.
+#   프론트에서는 업로드 응답의 imageUrl(/api/images/...)을 그대로 씁니다.
+# - 아래 요청들은 이 파일과 같은 폴더의 테스트 이미지를 올립니다.
+#   http/sample.jpg (5MB 이하), http/large.jpg (5MB 초과), http/sample.txt 를 직접 준비하세요.
+#   준비한 테스트 파일은 커밋하지 않습니다.
+# - 로그인은 같은 IP에서 15분에 5번까지입니다. 이 파일은 로그인을 2번 합니다.
+
+# 2번 응답의 data.imageKey 를 넣으세요
+@imageKey = public/products/여기에_2번_응답의_imageKey
+
+### 1. 로그인 - 일반 유저
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "user@snack.com", "password": "Password123!" }
+
+### --- 업로드 ---
+
+### 2. 이미지 업로드 (201 예상)
+# data.imageKey 는 public/products/ 로 시작
+# data.imageUrl 은 /api/images/{imageKey}
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=----SnackBoundary
+
+------SnackBoundary
+Content-Disposition: form-data; name="image"; filename="sample.jpg"
+Content-Type: image/jpeg
+
+< ./sample.jpg
+------SnackBoundary--
+
+### 3. 파일 없이 요청 (400 예상)
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=----SnackBoundary
+
+------SnackBoundary--
+
+### 4. 이미지 대신 텍스트 파일 (400 예상)
+# "jpg, png, webp, gif 이미지만 올릴 수 있습니다."
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=----SnackBoundary
+
+------SnackBoundary
+Content-Disposition: form-data; name="image"; filename="sample.txt"
+Content-Type: text/plain
+
+< ./sample.txt
+------SnackBoundary--
+
+### 5. 5MB 초과 (400 예상)
+# "이미지는 5MB 이하만 올릴 수 있습니다."
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=----SnackBoundary
+
+------SnackBoundary
+Content-Disposition: form-data; name="image"; filename="large.jpg"
+Content-Type: image/jpeg
+
+< ./large.jpg
+------SnackBoundary--
+
+### 6. 필드명이 image가 아님 (400 예상)
+# "이미지는 image 필드로 보내주세요."
+POST {{baseUrl}}/images
+Content-Type: multipart/form-data; boundary=----SnackBoundary
+
+------SnackBoundary
+Content-Disposition: form-data; name="file"; filename="sample.jpg"
+Content-Type: image/jpeg
+
+< ./sample.jpg
+------SnackBoundary--
+
+### --- 조회 ---
+
+### 7. 업로드한 이미지 조회 (200 예상)
+# 응답이 JSON이 아니라 이미지 자체여야 함 (Content-Type: image/jpeg)
+GET {{baseUrl}}/images/{{imageKey}}
+
+### 7-1. 로그인 없이 조회 (브라우저 시크릿 창에서 확인, 200 예상)
+# http://localhost:3001/images/{imageKey} 를 주소창에 직접 입력
+# 조회는 인증을 요구하지 않으므로 쿠키 없이도 이미지가 보여야 합니다.
+# (업로드·삭제는 그대로 로그인이 필요합니다)
+
+### 8. 없는 이미지 (404 예상)
+# "이미지를 찾을 수 없습니다."
+GET {{baseUrl}}/images/public/products/없는파일.jpg
+
+### 9. 상품 이미지 폴더 밖 (400 예상)
+# "올바른 이미지 경로가 아닙니다."
+GET {{baseUrl}}/images/private/users/1/document.png
+
+### 10. S3 주소로 직접 접근 (브라우저에서 확인, 403 예상)
+# https://버킷이름.s3.ap-northeast-2.amazonaws.com/{imageKey}
+# 프라이빗 버킷이라 AccessDenied가 나와야 정상입니다.
+
+### --- 삭제 (관리자 이상) ---
+
+### 11. 일반 유저가 삭제 시도 (403 예상)
+DELETE {{baseUrl}}/images/{{imageKey}}
+
+### 12. 로그인 - 관리자
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "admin@snack.com", "password": "Password123!" }
+
+### 13. 관리자가 삭제 (200 예상)
+DELETE {{baseUrl}}/images/{{imageKey}}
+
+### 14. 삭제한 이미지 조회 (404 예상)
+GET {{baseUrl}}/images/{{imageKey}}

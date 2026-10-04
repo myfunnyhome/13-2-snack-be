@@ -1,0 +1,127 @@
+@baseUrl = http://localhost:3001
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# superadmin@snack.com   SUPER_ADMIN
+
+### === 정상 플로우: 초대 생성 → 메일 확인 → 가입 ===
+
+### 1. SUPER_ADMIN 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "superadmin@snack.com", "password": "Password123!" }
+
+### 2. 회원 초대 생성 - GENERAL
+# email을 실제로 받아볼 수 있는 본인 이메일로 넣을 것
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "실제_받아볼_이메일@gmail.com",
+  "name": "초대일반",
+  "role": "GENERAL"
+}
+
+### --- 여기서 메일함 확인 ---
+# 위 요청 성공(201) 후 실제 메일함에서 초대 메일 확인
+# 메일 안 링크(...?token=xxx)에서 token 값을 복사해서
+# 아래 {{token}}에 붙여넣고 이어서 진행
+
+@token = 여기에_메일에서_복사한_토큰_붙여넣기
+
+### 3. 초대 정보 확인 (토큰으로 조회, 200 예상)
+GET {{baseUrl}}/invitations/{{token}}
+
+### 4. 초대 기반 회원가입 (201 예상)
+# email은 2번에서 초대한 이메일과 동일해야 함
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationToken": "{{token}}",
+  "name": "초대일반",
+  "email": "실제_받아볼_이메일@gmail.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}
+
+### 5. 방금 가입한 계정으로 로그인 (200 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "실제_받아볼_이메일@gmail.com", "password": "password123" }
+
+### 6. 같은 토큰으로 재가입 시도 (409 예상, 이미 사용된 초대)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationToken": "{{token}}",
+  "name": "초대일반2",
+  "email": "another-email@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}
+
+### === 에러 케이스 (독립적으로 실행 가능, 순서 무관) ===
+
+### 7. SUPER_ADMIN 초대 시도 (400 예상)
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "invited-super@test.com",
+  "name": "초대최고관리자",
+  "role": "SUPER_ADMIN"
+}
+
+### 8. 잘못된 이메일 형식 (400 예상)
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "wrong-email",
+  "name": "초대회원",
+  "role": "GENERAL"
+}
+
+### 9. 존재하지 않는 토큰으로 조회 (404 예상)
+GET {{baseUrl}}/invitations/not-exist-token
+
+### 10. 만료된 초대로 조회 (400 예상)
+# 시드 데이터 기준 expired@snack.com 초대는 이미 만료 상태로 준비되어 있음
+GET {{baseUrl}}/invitations/seed-token-expired
+
+### 11. 이미 사용된 초대로 조회 (409 예상)
+# 시드 데이터 기준 used@snack.com 초대는 이미 사용 처리되어 있음
+GET {{baseUrl}}/invitations/seed-token-used
+
+### 12. 초대 이메일과 다른 이메일로 가입 시도 (400 예상)
+# 2번에서 새 초대를 먼저 만들고, 그 토큰을 아래 {{token}}에 넣어서 실행
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "invitationToken": "{{token}}",
+  "name": "다른사람",
+  "email": "completely-different@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123"
+}
+
+### 13. 로그아웃
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+### 14. 쿠키 없이 초대 생성 시도 (401 예상)
+POST {{baseUrl}}/super-admin/invitations
+Content-Type: application/json
+
+{
+  "email": "no-cookie@test.com",
+  "name": "쿠키없음",
+  "role": "GENERAL"
+}
+
+### 15. 시드 초기화 안내
+# 이 파일로 테스트 후 터미널에서 npm run seed 실행

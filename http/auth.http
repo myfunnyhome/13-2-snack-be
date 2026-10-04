@@ -1,0 +1,199 @@
+@baseUrl = http://localhost:3001
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# superadmin@snack.com   SUPER_ADMIN
+# admin@snack.com        ADMIN
+# user@snack.com         GENERAL
+
+### 1. 회원가입 (Super Admin)
+# email을 실제로 받아볼 수 있는 본인 이메일로 넣을 것 (13번 재설정 테스트에서 재사용)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트관리자",
+  "email": "실제_받아볼_이메일@gmail.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "테스트회사",
+  "bizRegNumber": "111-22-33344"
+}
+
+### 2. 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "실제_받아볼_이메일@gmail.com",
+  "password": "password123"
+}
+
+### 3. 토큰 갱신
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### 4. 로그아웃
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+### --- 에러 케이스 ---
+
+### 5. 중복 이메일 가입 (409 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "중복유저",
+  "email": "admin@snack.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "중복회사",
+  "bizRegNumber": "999-88-77766"
+}
+
+### 6. 비밀번호 불일치 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "new@test.com",
+  "password": "password123",
+  "passwordConfirm": "wrongpassword",
+  "organizationName": "테스트회사2",
+  "bizRegNumber": "555-44-33322"
+}
+
+### 7. 잘못된 비밀번호 로그인 (401 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "admin@snack.com",
+  "password": "wrongpassword"
+}
+
+### 8. 쿠키 없이 토큰 갱신 (401 예상)
+POST {{baseUrl}}/auth/refresh-token
+Content-Type: application/json
+
+### 9. 쿠키 없이 로그아웃 (401 예상)
+POST {{baseUrl}}/auth/signout
+Content-Type: application/json
+
+### 10. 비활성 계정 로그인 (401 / ACCOUNT_INACTIVE 예상)
+# 준비: DB에서 inactive@snack.com의 isActive를 false로 변경 후 실행
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "inactive@snack.com",
+  "password": "Password123!"
+}
+
+### --- 사업자번호 ---
+
+### 11. 사업자번호 누락 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "biz1@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "사업자테스트1"
+}
+
+### 12. 사업자번호에 문자 포함 (400 예상)
+POST {{baseUrl}}/auth/signup
+Content-Type: application/json
+
+{
+  "name": "테스트",
+  "email": "biz2@test.com",
+  "password": "password123",
+  "passwordConfirm": "password123",
+  "organizationName": "사업자테스트2",
+  "bizRegNumber": "12345678ab"
+}
+
+### --- 비밀번호 재설정 ---
+
+### 13. 재설정 요청 - 존재하는 이메일 (200 예상, 항상 동일 메시지)
+# 1번에서 가입한 실제 이메일 그대로 사용
+POST {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{ "email": "실제_받아볼_이메일@gmail.com" }
+
+### --- 여기서 메일함 확인 ---
+# 위 요청 후 실제 메일함에서 재설정 메일 확인
+# 메일 안 링크(...?token=xxx)에서 token 값을 복사해서 아래에 붙여넣기
+
+@resetToken = 여기에_메일에서_복사한_토큰_붙여넣기
+
+### 14. 재설정 요청 - 존재하지 않는 이메일 (200 예상, 13번과 동일 메시지여야 함)
+POST {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{ "email": "nobody@test.com" }
+
+### 15. 재설정 실행 - 유효하지 않은 토큰 (400 예상)
+PATCH {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{
+  "resetPasswordToken": "invalid-token",
+  "password": "newpassword123",
+  "passwordConfirm": "newpassword123"
+}
+
+### 16. 재설정 실행 - 정상 토큰 (200 예상)
+# {{resetToken}}에 13번에서 받은 메일의 토큰이 들어있어야 함
+# 성공 시 확인할 것:
+#   - Account.password가 새 비밀번호 해시로 바뀜
+#   - Account.refreshToken이 null로 초기화됨 (기존 세션 무효화)
+#   - Account.resetPasswordToken, resetPasswordTokenExpiresAt이 null로 초기화됨
+#   - 이후 같은 토큰으로는 재사용 불가능해야 함 (18번에서 확인)
+PATCH {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{
+  "resetPasswordToken": "{{resetToken}}",
+  "password": "newpassword123",
+  "passwordConfirm": "newpassword123"
+}
+
+### 17. 재설정 후 새 비밀번호로 로그인 (200 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "실제_받아볼_이메일@gmail.com", "password": "newpassword123" }
+
+### 18. 같은 토큰 재사용 시도 (400 예상, 이미 소진됨)
+PATCH {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{
+  "resetPasswordToken": "{{resetToken}}",
+  "password": "another123",
+  "passwordConfirm": "another123"
+}
+
+### --- Rate Limit ---
+
+### 19. 로그인 rate limit (연속 6회 요청, 6번째 429 예상)
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{ "email": "user@snack.com", "password": "wrongpassword" }
+
+### 20. 재설정 요청 rate limit (연속 6회 요청, 6번째 429 예상)
+POST {{baseUrl}}/auth/password-reset
+Content-Type: application/json
+
+{ "email": "user@snack.com" }
+
+### 21. 시드 초기화 안내
+# 이 파일로 테스트 후 터미널에서 npm run seed 실행
