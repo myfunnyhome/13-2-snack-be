@@ -11,13 +11,12 @@ jobs:
 
     steps:
       - name: 깃헙 레포지토리 불러오기
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Node 버전 고정
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v4
         with:
           node-version: '24'
-          package-manager-cache: false
 
       - name: Production 환경변수 파일 생성
         env:
