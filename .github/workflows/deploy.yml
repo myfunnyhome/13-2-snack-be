@@ -1,0 +1,65 @@
+name: Deploy To EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 깃헙 레포지토리 불러오기
+        uses: actions/checkout@v4
+
+      - name: Node 버전 고정 (EC2와 동일하게)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Production 환경변수 파일 생성
+        env:
+          ENV_FILE: ${{ secrets.ENV }}
+        run: |
+          printf '%s' "$ENV_FILE" > .env
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 테스트 코드 실행
+        run: npm run test
+
+      - name: 빌드
+        run: npm run build
+
+      - name: 빌드파일 압축하기
+        run: tar -czvf project.tar.gz dist .env package.json package-lock.json
+
+      - name: SCP 사용하여 EC2에 빌드파일 전송하기
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          source: project.tar.gz
+          target: /home/ec2-user/snack-backend
+
+      - name: SSH로 EC2에 접속하여 배포하기
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            cd /home/ec2-user/snack-backend
+
+            tar -xvf project.tar.gz
+            rm -f project.tar.gz
+
+            npm ci
+
+            pm2 restart snack-backend
