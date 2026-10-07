@@ -43,19 +43,40 @@ Content-Type: application/json
 PATCH {{baseUrl}}/me/profile
 Content-Type: application/json
 
-{ "password": "newpassword123", "passwordConfirm": "wrongpassword" }
+{ "currentPassword": "Password123!", "password": "newpassword123", "passwordConfirm": "wrongpassword" }
 
 ### 7. 비밀번호 8자 미만 (400 예상)
 PATCH {{baseUrl}}/me/profile
 Content-Type: application/json
 
-{ "password": "short", "passwordConfirm": "short" }
+{ "currentPassword": "Password123!", "password": "short", "passwordConfirm": "short" }
 
 ### 8. 회사명 빈 문자열 (400 예상)
 PATCH {{baseUrl}}/me/profile
 Content-Type: application/json
 
 { "organizationName": "" }
+
+### 8-1. 비밀번호 변경 시 currentPassword 누락 (400 / VALIDATION_ERROR 예상)
+PATCH {{baseUrl}}/me/profile
+Content-Type: application/json
+
+{ "password": "newpassword123", "passwordConfirm": "newpassword123" }
+
+### 8-2. 현재 비밀번호 불일치 (400 / INVALID_CURRENT_PASSWORD 예상)
+# 아무것도 바뀌지 않고 세션도 유지되어야 한다. (회사명도 그대로, 다음 요청 GET /me 200)
+PATCH {{baseUrl}}/me/profile
+Content-Type: application/json
+
+{
+  "organizationName": "바뀌면안되는회사명",
+  "currentPassword": "wrongpassword",
+  "password": "newpassword123",
+  "passwordConfirm": "newpassword123"
+}
+
+### 8-3. 8-2 이후 세션 유지 확인 (200 예상, 회사명 변경 없음)
+GET {{baseUrl}}/me
 
 ### --- 권한 ---
 
@@ -176,7 +197,7 @@ Content-Type: application/json
 PATCH {{baseUrl}}/me/profile
 Content-Type: application/json
 
-{ "password": "newpassword123", "passwordConfirm": "newpassword123" }
+{ "currentPassword": "Password123!", "password": "newpassword123", "passwordConfirm": "newpassword123" }
 
 ### 31. 바뀐 비밀번호로 로그인 (200 예상)
 POST {{baseUrl}}/auth/signin
@@ -191,6 +212,7 @@ Content-Type: application/json
 
 {
   "organizationName": "스낵컴퍼니3",
+  "currentPassword": "newpassword123",
   "password": "Password123!",
   "passwordConfirm": "Password123!"
 }

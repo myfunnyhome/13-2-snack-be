@@ -149,6 +149,14 @@ export function findProfileById(
   });
 }
 
+// 비밀번호 변경 전 현재 비밀번호 확인용. 프로필 응답에 해시가 섞이지 않도록 따로 조회한다.
+export function findPasswordHashById(userId: number) {
+  return prisma.account.findUnique({
+    where: { userId },
+    select: { password: true },
+  });
+}
+
 export function updateProfile({
   userId,
   organizationId,
