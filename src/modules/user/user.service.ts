@@ -163,8 +163,6 @@ export async function updateProfile({
     throw new ForbiddenError('회사명은 최고관리자만 변경할 수 있습니다.');
   }
 
-  // 비밀번호 변경은 현재 비밀번호가 맞을 때만 진행한다.
-  // 틀리면 아무것도 바꾸지 않고(세션 유지) 400으로 응답해, 프론트의 401 세션 종료 처리와 구분한다.
   let passwordHash: string | undefined;
 
   if (password !== undefined) {

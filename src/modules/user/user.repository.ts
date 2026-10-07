@@ -108,8 +108,6 @@ export function findTargetById(userId: number): Promise<FindTargetResult> {
   });
 }
 
-// 권한 변경·탈퇴·비밀번호 변경 시 tokenVersion을 올리고 저장된 Refresh Token을 지워
-// 이전에 발급한 Access/Refresh Token을 모두 무효화한다. (auth.middleware.ts의 isRevoked)
 export function updateRole(userId: number, role: Role): Promise<UserListItem> {
   return prisma.$transaction(async (tx) => {
     await tx.account.updateMany({
@@ -149,7 +147,6 @@ export function findProfileById(
   });
 }
 
-// 비밀번호 변경 전 현재 비밀번호 확인용. 프로필 응답에 해시가 섞이지 않도록 따로 조회한다.
 export function findPasswordHashById(userId: number) {
   return prisma.account.findUnique({
     where: { userId },

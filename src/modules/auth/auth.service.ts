@@ -144,8 +144,6 @@ export async function signupWithInvitation(
 export async function signin(data: SigninInput): Promise<SigninResult> {
   const user = await authRepository.findUserWithAccountByEmail(data.email);
 
-  // 계정 존재 여부·비밀번호 일치 여부·비활성 상태가 드러나지 않도록
-  // 계정이 없어도 더미 해시로 bcrypt 비교를 거치고, 세 경우 모두 같은 응답을 준다.
   const isMatched = await isPasswordMatched(
     data.password,
     user?.account?.password ?? DUMMY_PASSWORD_HASH,

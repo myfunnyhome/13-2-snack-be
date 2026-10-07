@@ -87,7 +87,7 @@
  *       401:
  *         description: >
  *           인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED),
- *           권한 변경·탈퇴·비밀번호 변경/재설정으로 무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
+ *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
  *             schema:
@@ -104,10 +104,8 @@
  *     description: |
  *       비밀번호와 회사명을 수정합니다. 보낸 항목만 수정되고 둘 중 하나는 반드시 보내야 합니다.
  *       회사명은 SUPER_ADMIN만 수정할 수 있습니다.
- *       비밀번호를 변경할 때는 currentPassword가 필수이며, 현재 비밀번호가 틀리면
- *       400(INVALID_CURRENT_PASSWORD)을 반환하고 비밀번호·회사명을 포함해 아무것도 변경하지 않습니다(세션 유지).
- *       비밀번호를 변경하면 현재 사용 중인 토큰을 포함해 기존에 발급된 accessToken, refreshToken이 모두 무효화되어
- *       다음 요청부터 TOKEN_REVOKED(쿠키 삭제)가 반환되므로 새 비밀번호로 다시 로그인해야 합니다.
+ *       비밀번호를 변경할 때는 currentPassword가 필수이며, 틀리면 400(INVALID_CURRENT_PASSWORD)이고 아무것도 변경되지 않습니다.
+ *       변경에 성공하면 현재 세션을 포함한 기존 세션이 모두 무효화되어(TOKEN_REVOKED) 다시 로그인해야 합니다.
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -151,7 +149,7 @@
  *                       $ref: '#/components/schemas/UserProfile'
  *       400:
  *         description: >
- *           유효성 검사 실패 (VALIDATION_ERROR, password를 보낼 때 currentPassword 누락 포함),
+ *           유효성 검사 실패 (VALIDATION_ERROR, currentPassword 누락 포함),
  *           변경할 항목이 없음 (BAD_REQUEST), 현재 비밀번호 불일치 (INVALID_CURRENT_PASSWORD)
  *         content:
  *           application/json:
@@ -160,7 +158,7 @@
  *       401:
  *         description: >
  *           인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED),
- *           권한 변경·탈퇴·비밀번호 변경/재설정으로 무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
+ *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
  *             schema:
@@ -230,7 +228,7 @@
  *     summary: 회원 권한 변경
  *     description: |
  *       SUPER_ADMIN만 호출할 수 있습니다. 같은 조직의 회원 권한을 GENERAL 또는 ADMIN으로 바꿉니다.
- *       대상 회원의 기존 accessToken, refreshToken은 즉시 무효화되어(TOKEN_REVOKED) 다시 로그인해야 합니다.
+ *       대상 회원의 기존 세션은 즉시 무효화됩니다(TOKEN_REVOKED).
  *     tags: [User]
  *     parameters:
  *       - in: path
@@ -286,8 +284,7 @@
  *     summary: 회원 탈퇴 처리
  *     description: |
  *       SUPER_ADMIN만 호출할 수 있습니다.
- *       회원을 비활성화(소프트 삭제)하고 기존 accessToken, refreshToken을 즉시 무효화합니다(TOKEN_REVOKED).
- *       데이터는 삭제되지 않습니다.
+ *       회원을 비활성화(소프트 삭제)하고 기존 세션을 즉시 무효화합니다(TOKEN_REVOKED). 데이터는 삭제되지 않습니다.
  *     tags: [User]
  *     parameters:
  *       - in: path

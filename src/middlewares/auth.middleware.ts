@@ -6,9 +6,6 @@ import { findTokenOwnerStatus } from '../modules/auth/auth.repository';
 import { ForbiddenError, UnauthorizedError } from '../types/errors';
 import { isTokenRevoked } from '../utils/authToken';
 
-// 서명·만료 검증을 통과한 토큰만 여기로 온다. (만료는 TOKEN_EXPIRED로 따로 처리)
-// 권한 변경·탈퇴·비밀번호 변경으로 DB의 tokenVersion이 올라갔거나
-// 비활성 계정이면 revoked_token 에러가 되어 errorHandler에서 TOKEN_REVOKED로 응답한다.
 const checkTokenRevoked: IsRevoked = async (_req, token) => {
   const payload = token?.payload;
 

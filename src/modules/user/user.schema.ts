@@ -56,7 +56,6 @@ export const updateProfileSchema = z
         .trim()
         .optional(),
 
-      // 로그인(signin)과 같은 기준으로 비교하도록 trim하지 않는다.
       currentPassword: z
         .string({ error: '현재 비밀번호는 문자열이어야 합니다.' })
         .min(1, { error: '현재 비밀번호를 입력해주세요.' })

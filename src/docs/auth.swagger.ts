@@ -229,8 +229,7 @@
  *         $ref: '#/components/responses/ValidationError'
  *       401:
  *         description: >
- *           계정 없음, 비밀번호 불일치, 비활성화된 계정 모두 같은 응답 (UNAUTHORIZED,
- *           "이메일 또는 비밀번호가 일치하지 않습니다.")
+ *           계정 없음·비밀번호 불일치·비활성 계정 모두 같은 응답 (UNAUTHORIZED)
  *         content:
  *           application/json:
  *             schema:
@@ -251,8 +250,7 @@
  *     description: >
  *       refreshToken 쿠키를 검증하고 새 accessToken, refreshToken을 발급합니다.
  *       accessToken 없이 refreshToken 쿠키만으로 동작합니다.
- *       권한 변경·탈퇴·비밀번호 변경/재설정으로 무효화된 토큰(TOKEN_REVOKED)과
- *       서비스 단계에서 거부된 경우(저장된 토큰 불일치)에는 accessToken, refreshToken 쿠키가 삭제됩니다.
+ *       무효화된 토큰(TOKEN_REVOKED)이거나 저장된 토큰과 일치하지 않으면 accessToken, refreshToken 쿠키가 삭제됩니다.
  *       토큰 없음, 위조, 만료처럼 인증 미들웨어에서 거부된 경우에는 쿠키가 삭제되지 않습니다.
  *     tags: [Auth]
  *     security:
@@ -278,7 +276,7 @@
  *         description: >
  *           refreshToken 없음, 위조, 불일치 (UNAUTHORIZED),
  *           refreshToken 만료 (SESSION_EXPIRED),
- *           권한 변경·탈퇴·비밀번호 변경/재설정으로 무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
+ *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
  *             schema:
@@ -357,8 +355,7 @@
  *     summary: 비밀번호 재설정 실행
  *     description: >
  *       메일로 받은 토큰으로 새 비밀번호를 설정합니다.
- *       성공 시 기존에 발급된 accessToken, refreshToken이 모두 무효화되어(TOKEN_REVOKED)
- *       다시 로그인해야 하고, 같은 재설정 토큰은 다시 쓸 수 없습니다.
+ *       성공 시 기존 세션이 모두 무효화되고(TOKEN_REVOKED), 같은 재설정 토큰은 다시 쓸 수 없습니다.
  *     tags: [Auth]
  *     security:
  *       - csrfHeader: []

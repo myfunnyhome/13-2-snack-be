@@ -37,8 +37,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   // express-jwt 검증 실패 에러 추가
   if (err instanceof ExpressJwtUnauthorizedError) {
-    // 권한 변경·탈퇴·비밀번호 변경으로 무효화된 토큰(auth.middleware.ts의 isRevoked).
-    // 재발급으로 복구할 수 없으므로 쿠키를 지워 다시 로그인하게 한다.
     if (err.code === 'revoked_token') {
       return res
         .clearCookie('accessToken', clearCookieOptions)
