@@ -10,7 +10,27 @@ export type TokenPayload = {
   userId: number;
   organizationId: number;
   role: Role;
+  // 권한 변경·탈퇴·비밀번호 변경 시 DB의 User.tokenVersion이 올라가
+  // 그 이전에 발급한 토큰은 모두 무효가 된다. (auth.middleware.ts의 isRevoked)
+  tokenVersion: number;
 };
+
+type TokenOwnerStatus = {
+  isActive: boolean;
+  tokenVersion: number;
+};
+
+// 버전이 없는 토큰(tokenVersion 도입 전에 발급)도 무효로 본다.
+export function isTokenRevoked(
+  tokenVersion: unknown,
+  owner: TokenOwnerStatus | null,
+): boolean {
+  if (typeof tokenVersion !== 'number' || !owner) {
+    return true;
+  }
+
+  return !owner.isActive || owner.tokenVersion !== tokenVersion;
+}
 
 function getTokenSecret(type: TokenType): string {
   const secret =

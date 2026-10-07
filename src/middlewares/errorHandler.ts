@@ -3,7 +3,7 @@ import { UnauthorizedError as ExpressJwtUnauthorizedError } from 'express-jwt';
 import { ZodError } from 'zod';
 
 import { Prisma } from '../generated/prisma/client';
-// import { clearCookieOptions } from '../modules/auth/auth.controller'; 추가 필요한데 추가해도 되는지?
+import { clearCookieOptions } from '../modules/auth/auth.controller';
 import { AppError } from '../types/errors';
 
 /*
@@ -37,6 +37,20 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
   // express-jwt 검증 실패 에러 추가
   if (err instanceof ExpressJwtUnauthorizedError) {
+    // 권한 변경·탈퇴·비밀번호 변경으로 무효화된 토큰(auth.middleware.ts의 isRevoked).
+    // 재발급으로 복구할 수 없으므로 쿠키를 지워 다시 로그인하게 한다.
+    if (err.code === 'revoked_token') {
+      return res
+        .clearCookie('accessToken', clearCookieOptions)
+        .clearCookie('refreshToken', clearCookieOptions)
+        .status(401)
+        .json({
+          success: false,
+          message: '인증 정보가 변경되었습니다. 다시 로그인해주세요.',
+          code: 'TOKEN_REVOKED',
+        });
+    }
+
     const isTokenExpired =
       err.inner instanceof Error && err.inner.name === 'TokenExpiredError';
     const isRefreshRequest = req.path === '/auth/refresh-token';

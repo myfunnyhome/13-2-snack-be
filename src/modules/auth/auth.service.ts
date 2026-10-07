@@ -11,7 +11,11 @@ import {
   hashRefreshToken,
 } from '../../utils/authToken';
 import { sendPasswordResetEmail } from '../../utils/mailer';
-import { createPasswordHash, isPasswordMatched } from '../../utils/password';
+import {
+  DUMMY_PASSWORD_HASH,
+  createPasswordHash,
+  isPasswordMatched,
+} from '../../utils/password';
 import { generateToken, hashToken } from '../../utils/token';
 import * as invitationService from '../invitation/invitation.service';
 import * as authRepository from './auth.repository';
@@ -140,26 +144,22 @@ export async function signupWithInvitation(
 export async function signin(data: SigninInput): Promise<SigninResult> {
   const user = await authRepository.findUserWithAccountByEmail(data.email);
 
-  if (!user?.account) {
-    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
-  }
-
+  // 계정 존재 여부·비밀번호 일치 여부·비활성 상태가 드러나지 않도록
+  // 계정이 없어도 더미 해시로 bcrypt 비교를 거치고, 세 경우 모두 같은 응답을 준다.
   const isMatched = await isPasswordMatched(
     data.password,
-    user.account.password,
+    user?.account?.password ?? DUMMY_PASSWORD_HASH,
   );
-  if (!isMatched) {
-    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
-  }
 
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
+  if (!user?.account || !isMatched || !user.isActive) {
+    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
   }
 
   const tokenPayload: TokenPayload = {
     userId: user.id,
     organizationId: user.organizationId,
     role: user.role,
+    tokenVersion: user.tokenVersion,
   };
 
   const accessToken = createAccessToken(tokenPayload);
@@ -202,6 +202,7 @@ export async function refresh(
     userId: user.id,
     role: user.role,
     organizationId: user.organizationId,
+    tokenVersion: user.tokenVersion,
   };
 
   const newAccessToken = createAccessToken(tokenPayload);

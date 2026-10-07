@@ -108,11 +108,20 @@ export function findTargetById(userId: number): Promise<FindTargetResult> {
   });
 }
 
+// 권한 변경·탈퇴·비밀번호 변경 시 tokenVersion을 올리고 저장된 Refresh Token을 지워
+// 이전에 발급한 Access/Refresh Token을 모두 무효화한다. (auth.middleware.ts의 isRevoked)
 export function updateRole(userId: number, role: Role): Promise<UserListItem> {
-  return prisma.user.update({
-    where: { id: userId },
-    data: { role },
-    select: userListArgs.select,
+  return prisma.$transaction(async (tx) => {
+    await tx.account.updateMany({
+      where: { userId },
+      data: { refreshToken: null },
+    });
+
+    return await tx.user.update({
+      where: { id: userId },
+      data: { role, tokenVersion: { increment: 1 } },
+      select: userListArgs.select,
+    });
   });
 }
 
@@ -125,7 +134,7 @@ export function deactivate(userId: number): Promise<UserListItem> {
 
     return await tx.user.update({
       where: { id: userId },
-      data: { isActive: false },
+      data: { isActive: false, tokenVersion: { increment: 1 } },
       select: userListArgs.select,
     });
   });
@@ -150,7 +159,11 @@ export function updateProfile({
     if (passwordHash !== undefined) {
       await tx.account.update({
         where: { userId },
-        data: { password: passwordHash },
+        data: { password: passwordHash, refreshToken: null },
+      });
+      await tx.user.update({
+        where: { id: userId },
+        data: { tokenVersion: { increment: 1 } },
       });
     }
 

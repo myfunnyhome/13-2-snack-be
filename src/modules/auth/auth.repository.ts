@@ -30,6 +30,7 @@ const findUserWithAccountByEmailArgs = {
     email: true,
     role: true,
     isActive: true,
+    tokenVersion: true,
     organizationId: true,
     account: {
       select: {
@@ -93,6 +94,7 @@ const findUserWithAccountByIdArgs = {
     id: true,
     role: true,
     isActive: true,
+    tokenVersion: true,
     organizationId: true,
     account: {
       select: {
@@ -200,6 +202,14 @@ export function findUserWithAccountById(
   });
 }
 
+// 토큰 무효화 여부 확인용 (auth.middleware.ts의 isRevoked)
+export function findTokenOwnerStatus(userId: number) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { isActive: true, tokenVersion: true },
+  });
+}
+
 export function createUserWithInvitation({
   invitationToken,
   name,
@@ -303,8 +313,10 @@ export function resetPassword(
       },
     });
 
-    return tx.user.findUnique({
+    // 재설정 전에 발급한 Access/Refresh Token을 모두 무효화한다.
+    return tx.user.update({
       where: { id: account.userId },
+      data: { tokenVersion: { increment: 1 } },
       select: findUserByResetTokenArgs.select,
     });
   });

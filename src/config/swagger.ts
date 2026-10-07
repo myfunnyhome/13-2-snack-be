@@ -89,7 +89,7 @@ const options: swaggerJSDoc.Options = {
         },
         Unauthorized: {
           description:
-            '인증 실패 (UNAUTHORIZED) 또는 accessToken 만료 (TOKEN_EXPIRED)',
+            '인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED) 또는 권한 변경·탈퇴·비밀번호 변경/재설정으로 무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)',
           content: errorContent,
         },
         Forbidden: {

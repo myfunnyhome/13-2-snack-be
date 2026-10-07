@@ -44,6 +44,7 @@ model User {
   email          String   @unique
   role           Role     @default(GENERAL)
   isActive       Boolean  @default(true) // 소프트 삭제(탈퇴) 처리용
+  tokenVersion   Int      @default(0) // 권한 변경·탈퇴·비밀번호 변경 시 증가시켜 기존 토큰 무효화
   organizationId Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
