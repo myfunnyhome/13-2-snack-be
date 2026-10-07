@@ -7,6 +7,7 @@
 
 ### 1. SUPER_ADMIN 로그인
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "superadmin@snack.com", "password": "Password123!" }
@@ -14,6 +15,7 @@ Content-Type: application/json
 ### 2. 회원 초대 생성 - GENERAL
 # email을 실제로 받아볼 수 있는 본인 이메일로 넣을 것
 POST {{baseUrl}}/super-admin/invitations
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -35,6 +37,7 @@ GET {{baseUrl}}/invitations/{{token}}
 ### 4. 초대 기반 회원가입 (201 예상)
 # email은 2번에서 초대한 이메일과 동일해야 함
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -47,12 +50,14 @@ Content-Type: application/json
 
 ### 5. 방금 가입한 계정으로 로그인 (200 예상)
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "실제_받아볼_이메일@gmail.com", "password": "password123" }
 
 ### 6. 같은 토큰으로 재가입 시도 (409 예상, 이미 사용된 초대)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -67,6 +72,7 @@ Content-Type: application/json
 
 ### 7. SUPER_ADMIN 초대 시도 (400 예상)
 POST {{baseUrl}}/super-admin/invitations
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -77,6 +83,7 @@ Content-Type: application/json
 
 ### 8. 잘못된 이메일 형식 (400 예상)
 POST {{baseUrl}}/super-admin/invitations
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -99,6 +106,7 @@ GET {{baseUrl}}/invitations/seed-token-used
 ### 12. 초대 이메일과 다른 이메일로 가입 시도 (400 예상)
 # 2번에서 새 초대를 먼저 만들고, 그 토큰을 아래 {{token}}에 넣어서 실행
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -111,10 +119,12 @@ Content-Type: application/json
 
 ### 13. 로그아웃
 POST {{baseUrl}}/auth/signout
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 ### 14. 쿠키 없이 초대 생성 시도 (401 예상)
 POST {{baseUrl}}/super-admin/invitations
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {

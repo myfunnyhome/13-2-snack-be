@@ -8,6 +8,7 @@
 ### 1. 회원가입 (Super Admin)
 # email을 실제로 받아볼 수 있는 본인 이메일로 넣을 것 (13번 재설정 테스트에서 재사용)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -21,6 +22,7 @@ Content-Type: application/json
 
 ### 2. 로그인
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -30,16 +32,19 @@ Content-Type: application/json
 
 ### 3. 토큰 갱신
 POST {{baseUrl}}/auth/refresh-token
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 ### 4. 로그아웃
 POST {{baseUrl}}/auth/signout
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 ### --- 에러 케이스 ---
 
 ### 5. 중복 이메일 가입 (409 예상)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -53,6 +58,7 @@ Content-Type: application/json
 
 ### 6. 비밀번호 불일치 (400 예상)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -67,6 +73,7 @@ Content-Type: application/json
 ### 7. 존재하지 않는 계정 로그인 (401 / UNAUTHORIZED 예상)
 # 시드에 없는 계정. 계정 존재 여부가 드러나지 않도록 10번(비활성 계정)과 같은 응답이 와야 한다.
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -76,9 +83,16 @@ Content-Type: application/json
 
 ### 8. 쿠키 없이 토큰 갱신 (401 예상)
 POST {{baseUrl}}/auth/refresh-token
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 ### 9. 쿠키 없이 로그아웃 (401 예상)
+POST {{baseUrl}}/auth/signout
+X-CSRF-Protection: 1
+Content-Type: application/json
+
+### 9-1. CSRF 헤더 없이 변경 요청 (403 / CSRF_REJECTED 예상)
+# GET을 제외한 변경 요청은 X-CSRF-Protection: 1이 없으면 라우터에 닿기 전에 거부된다.
 POST {{baseUrl}}/auth/signout
 Content-Type: application/json
 
@@ -86,6 +100,7 @@ Content-Type: application/json
 # 시드의 inactive@snack.com은 isActive가 false인 계정이다.
 # 비밀번호가 맞아도 계정 상태가 드러나지 않도록 7번(존재하지 않는 계정)과 같은 응답이 와야 한다.
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -97,6 +112,7 @@ Content-Type: application/json
 
 ### 11. 사업자번호 누락 (400 예상)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -109,6 +125,7 @@ Content-Type: application/json
 
 ### 12. 사업자번호에 문자 포함 (400 예상)
 POST {{baseUrl}}/auth/signup
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -125,6 +142,7 @@ Content-Type: application/json
 ### 13. 재설정 요청 - 존재하는 이메일 (200 예상, 항상 동일 메시지)
 # 1번에서 가입한 실제 이메일 그대로 사용
 POST {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "실제_받아볼_이메일@gmail.com" }
@@ -137,12 +155,14 @@ Content-Type: application/json
 
 ### 14. 재설정 요청 - 존재하지 않는 이메일 (200 예상, 13번과 동일 메시지여야 함)
 POST {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "nobody@test.com" }
 
 ### 15. 재설정 실행 - 유효하지 않은 토큰 (400 예상)
 PATCH {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -159,6 +179,7 @@ Content-Type: application/json
 #   - Account.resetPasswordToken, resetPasswordTokenExpiresAt이 null로 초기화됨
 #   - 이후 같은 토큰으로는 재사용 불가능해야 함 (18번에서 확인)
 PATCH {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -169,12 +190,14 @@ Content-Type: application/json
 
 ### 17. 재설정 후 새 비밀번호로 로그인 (200 예상)
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "실제_받아볼_이메일@gmail.com", "password": "newpassword123" }
 
 ### 18. 같은 토큰 재사용 시도 (400 예상, 이미 소진됨)
 PATCH {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -187,12 +210,14 @@ Content-Type: application/json
 
 ### 19. 로그인 rate limit (연속 6회 요청, 6번째 429 예상)
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "user@snack.com", "password": "wrongpassword" }
 
 ### 20. 재설정 요청 rate limit (연속 6회 요청, 6번째 429 예상)
 POST {{baseUrl}}/auth/password-reset
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 { "email": "user@snack.com" }

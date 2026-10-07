@@ -131,7 +131,8 @@
  *       요청 바디에 invitationToken이 있으면 초대 가입, 없으면 최고관리자 가입으로 처리됩니다.
  *       최고관리자 가입에만 rate limit(IP당 1시간 10회)이 적용되고 초대 가입은 제한이 없습니다.
  *     tags: [Auth]
- *     security: []
+ *     security:
+ *       - csrfHeader: []
  *     requestBody:
  *       required: true
  *       content:
@@ -189,7 +190,8 @@
  *       성공 시 accessToken, refreshToken이 httpOnly 쿠키로 설정됩니다.
  *       IP당 15분에 5회까지 시도할 수 있습니다.
  *     tags: [Auth]
- *     security: []
+ *     security:
+ *       - csrfHeader: []
  *     requestBody:
  *       required: true
  *       content:
@@ -255,6 +257,7 @@
  *     tags: [Auth]
  *     security:
  *       - refreshCookieAuth: []
+ *         csrfHeader: []
  *     responses:
  *       200:
  *         description: 재발급 성공 (쿠키 갱신됨)
@@ -314,7 +317,8 @@
  *       계정 존재 여부와 상관없이 항상 같은 응답을 반환합니다.
  *       IP당 1시간에 5회까지 요청할 수 있습니다.
  *     tags: [Auth]
- *     security: []
+ *     security:
+ *       - csrfHeader: []
  *     requestBody:
  *       required: true
  *       content:
@@ -356,7 +360,8 @@
  *       성공 시 기존에 발급된 accessToken, refreshToken이 모두 무효화되어(TOKEN_REVOKED)
  *       다시 로그인해야 하고, 같은 재설정 토큰은 다시 쓸 수 없습니다.
  *     tags: [Auth]
- *     security: []
+ *     security:
+ *       - csrfHeader: []
  *     requestBody:
  *       required: true
  *       content:

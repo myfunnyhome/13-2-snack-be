@@ -13,6 +13,7 @@
 ### 1. 로그인 - 일반유저
 # @name userSignin
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -27,6 +28,7 @@ GET {{baseUrl}}/me/cart-items
 ### 3. 로그인 - 관리자 (user에게 없는 상품 id를 받기 위해)
 # @name adminSignin
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -40,6 +42,7 @@ GET {{baseUrl}}/me/cart-items
 
 ### 5. 일반유저로 다시 로그인
 POST {{baseUrl}}/auth/signin
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -51,6 +54,7 @@ Content-Type: application/json
 # 4번 응답의 첫 상품. user 장바구니에는 없음
 # @name addCartItem
 POST {{baseUrl}}/me/cart-items
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -60,6 +64,7 @@ Content-Type: application/json
 
 ### 7. 같은 상품 다시 담기 - 수량 합쳐짐 (201 예상)
 POST {{baseUrl}}/me/cart-items
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -72,6 +77,7 @@ GET {{baseUrl}}/me/cart-items
 
 ### 9. 수량 직접 입력 (피그마 숫자 입력, 200 예상)
 PATCH {{baseUrl}}/me/cart-items/{{addCartItem.response.body.data.id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -80,6 +86,7 @@ Content-Type: application/json
 
 ### 10. 수량 +1 처럼 변경 (200 예상)
 PATCH {{baseUrl}}/me/cart-items/{{addCartItem.response.body.data.id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -88,6 +95,7 @@ Content-Type: application/json
 
 ### 11. 수량 -1 처럼 변경 (200 예상)
 PATCH {{baseUrl}}/me/cart-items/{{addCartItem.response.body.data.id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -96,6 +104,7 @@ Content-Type: application/json
 
 ### 12. 방금 담은 항목 삭제 (200 예상)
 DELETE {{baseUrl}}/me/cart-items/{{addCartItem.response.body.data.id}}
+X-CSRF-Protection: 1
 
 ### 13. 삭제 후 조회 (200 예상)
 GET {{baseUrl}}/me/cart-items
@@ -104,6 +113,7 @@ GET {{baseUrl}}/me/cart-items
 
 ### 14. 없는 상품 담기 (404 예상)
 POST {{baseUrl}}/me/cart-items
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -113,6 +123,7 @@ Content-Type: application/json
 
 ### 15. 수량 0으로 변경 (400 예상)
 PATCH {{baseUrl}}/me/cart-items/{{getUserCart.response.body.$.data[0].id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -121,6 +132,7 @@ Content-Type: application/json
 
 ### 16. 수량 1000으로 변경 - 상한 초과 (400 예상)
 PATCH {{baseUrl}}/me/cart-items/{{getUserCart.response.body.$.data[0].id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -129,6 +141,7 @@ Content-Type: application/json
 
 ### 17. 없는 장바구니 항목 수량 변경 (404 예상)
 PATCH {{baseUrl}}/me/cart-items/999999
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -137,6 +150,7 @@ Content-Type: application/json
 
 ### 18. 남의 장바구니 항목 수량 변경 (404 예상)
 PATCH {{baseUrl}}/me/cart-items/{{getAdminCart.response.body.$.data[0].id}}
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {
@@ -147,6 +161,7 @@ Content-Type: application/json
 
 ### 19. 로그아웃 (200 예상)
 POST {{baseUrl}}/auth/signout
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 ### 20. 쿠키 없이 조회 (401 예상)
@@ -154,6 +169,7 @@ GET {{baseUrl}}/me/cart-items
 
 ### 21. 쿠키 없이 담기 (401 예상)
 POST {{baseUrl}}/me/cart-items
+X-CSRF-Protection: 1
 Content-Type: application/json
 
 {

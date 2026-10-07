@@ -15,7 +15,9 @@ const options: swaggerJSDoc.Options = {
       title: '간식대장(SNACK) API',
       version: '1.0.0',
       description:
-        '여러 플랫폼에서 구매하는 간식을 한 곳에서 관리하는 구매 요청·승인 서비스 API',
+        '여러 플랫폼에서 구매하는 간식을 한 곳에서 관리하는 구매 요청·승인 서비스 API.\n\n' +
+        'GET을 제외한 모든 변경 요청(POST/PATCH/DELETE)은 X-CSRF-Protection: 1 헤더가 필요하며, ' +
+        '없으면 403(CSRF_REJECTED)을 반환합니다. Authorize에서 csrfHeader 값을 1로 입력하세요.',
     },
     servers: [
       {
@@ -24,8 +26,9 @@ const options: swaggerJSDoc.Options = {
           `http://localhost:${process.env.PORT ?? 3000}`,
       },
     ],
-    // 기본은 accessToken 쿠키 인증. 인증이 필요 없는 엔드포인트는 문서에서 security: [] 로 덮어쓴다.
-    security: [{ cookieAuth: [] }],
+    // 기본은 accessToken 쿠키 인증 + CSRF 헤더. 인증이 필요 없는 엔드포인트는 문서에서 덮어쓴다.
+    // (조회 전용이면 security: [], 인증 없는 변경 요청이면 csrfHeader만)
+    security: [{ cookieAuth: [], csrfHeader: [] }],
     components: {
       securitySchemes: {
         cookieAuth: {
@@ -39,6 +42,13 @@ const options: swaggerJSDoc.Options = {
           in: 'cookie',
           name: 'refreshToken',
           description: '로그인 시 HttpOnly 쿠키로 발급되는 refreshToken',
+        },
+        csrfHeader: {
+          type: 'apiKey',
+          in: 'header',
+          name: 'X-CSRF-Protection',
+          description:
+            'GET을 제외한 변경 요청에 필수. 값은 1 (없으면 403 CSRF_REJECTED)',
         },
       },
       schemas: {
@@ -93,7 +103,8 @@ const options: swaggerJSDoc.Options = {
           content: errorContent,
         },
         Forbidden: {
-          description: '접근 권한 없음 (FORBIDDEN)',
+          description:
+            '접근 권한 없음 (FORBIDDEN) 또는 변경 요청에 X-CSRF-Protection 헤더 없음 (CSRF_REJECTED)',
           content: errorContent,
         },
         NotFound: {
