@@ -16,7 +16,7 @@
 
 ### 1. 로그인 - 일반 유저
 POST {{baseUrl}}/auth/signin
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "user@snack.com", "password": "Password123!" }
@@ -27,7 +27,7 @@ Content-Type: application/json
 # data.imageKey 는 public/products/ 로 시작
 # data.imageUrl 은 /api/images/{imageKey}
 POST {{baseUrl}}/images
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: multipart/form-data; boundary=----SnackBoundary
 
 ------SnackBoundary
@@ -39,7 +39,7 @@ Content-Type: image/jpeg
 
 ### 3. 파일 없이 요청 (400 예상)
 POST {{baseUrl}}/images
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: multipart/form-data; boundary=----SnackBoundary
 
 ------SnackBoundary--
@@ -47,7 +47,7 @@ Content-Type: multipart/form-data; boundary=----SnackBoundary
 ### 4. 이미지 대신 텍스트 파일 (400 예상)
 # "jpg, png, webp, gif 이미지만 올릴 수 있습니다."
 POST {{baseUrl}}/images
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: multipart/form-data; boundary=----SnackBoundary
 
 ------SnackBoundary
@@ -60,7 +60,7 @@ Content-Type: text/plain
 ### 5. 5MB 초과 (400 예상)
 # "이미지는 5MB 이하만 올릴 수 있습니다."
 POST {{baseUrl}}/images
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: multipart/form-data; boundary=----SnackBoundary
 
 ------SnackBoundary
@@ -73,7 +73,7 @@ Content-Type: image/jpeg
 ### 6. 필드명이 image가 아님 (400 예상)
 # "이미지는 image 필드로 보내주세요."
 POST {{baseUrl}}/images
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: multipart/form-data; boundary=----SnackBoundary
 
 ------SnackBoundary
@@ -110,18 +110,18 @@ GET {{baseUrl}}/images/private/users/1/document.png
 
 ### 11. 일반 유저가 삭제 시도 (403 예상)
 DELETE {{baseUrl}}/images/{{imageKey}}
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 
 ### 12. 로그인 - 관리자
 POST {{baseUrl}}/auth/signin
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "admin@snack.com", "password": "Password123!" }
 
 ### 13. 관리자가 삭제 (200 예상)
 DELETE {{baseUrl}}/images/{{imageKey}}
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 
 ### 14. 삭제한 이미지 조회 (404 예상)
 GET {{baseUrl}}/images/{{imageKey}}

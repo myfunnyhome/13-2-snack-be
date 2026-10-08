@@ -14,7 +14,6 @@ type SiteverifyResult = {
   metadata?: { result_with_testing_key?: boolean };
 };
 
-// 장애·timeout·설정 누락은 모두 false로 처리한다(fail-closed).
 async function isTurnstileTokenValid(token: string): Promise<boolean> {
   try {
     const response = await fetch(SITEVERIFY_URL, {
@@ -30,7 +29,6 @@ async function isTurnstileTokenValid(token: string): Promise<boolean> {
 
     if (!result.success) return false;
 
-    // Cloudflare 테스트 키 응답은 hostname이 example.com이고 action이 없다.
     if (result.metadata?.result_with_testing_key) return true;
 
     return (
@@ -43,8 +41,6 @@ async function isTurnstileTokenValid(token: string): Promise<boolean> {
   }
 }
 
-// 반복 실패 limiter(L1, L2)가 표시한 요청에만 Turnstile을 요구한다.
-// 통과 여부는 저장하지 않으므로 다음 요청은 다시 limiter 기준으로 판단한다.
 export async function requireTurnstileIfFlagged(
   req: Request,
   res: Response,

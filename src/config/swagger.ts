@@ -16,8 +16,8 @@ const options: swaggerJSDoc.Options = {
       version: '1.0.0',
       description:
         '여러 플랫폼에서 구매하는 간식을 한 곳에서 관리하는 구매 요청·승인 서비스 API.\n\n' +
-        '변경 요청(POST/PATCH/DELETE)에는 X-CSRF-Protection: 1 헤더가 필요합니다. ' +
-        'Swagger에서는 Authorize의 csrfHeader에 1을 입력하세요.',
+        '변경 요청(POST/PATCH/DELETE)에는 X-Requested-With: XMLHttpRequest 헤더가 필요합니다. ' +
+        'Swagger에서는 Authorize의 csrfHeader에 XMLHttpRequest를 입력하세요.',
     },
     servers: [
       {
@@ -44,8 +44,9 @@ const options: swaggerJSDoc.Options = {
         csrfHeader: {
           type: 'apiKey',
           in: 'header',
-          name: 'X-CSRF-Protection',
-          description: '변경 요청(POST/PATCH/DELETE)에 필수. 값은 1',
+          name: 'X-Requested-With',
+          description:
+            '변경 요청(POST/PATCH/DELETE)에 필수. 값은 XMLHttpRequest',
         },
       },
       schemas: {

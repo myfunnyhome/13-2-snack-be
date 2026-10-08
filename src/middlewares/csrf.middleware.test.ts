@@ -3,12 +3,8 @@ import type { Request, Response } from 'express';
 import { ForbiddenError } from '../types/errors';
 import { requireCsrfHeader } from './csrf.middleware';
 
-function createRequest(method: string, csrfHeader?: string): Request {
-  return {
-    method,
-    get: (name: string) =>
-      name.toLowerCase() === 'x-csrf-protection' ? csrfHeader : undefined,
-  } as unknown as Request;
+function createRequest(method: string, xhr = false): Request {
+  return { method, xhr } as unknown as Request;
 }
 
 describe('CSRF 헤더 검사 (requireCsrfHeader)', () => {
@@ -20,10 +16,10 @@ describe('CSRF 헤더 검사 (requireCsrfHeader)', () => {
     expect(next).toHaveBeenCalledWith();
   });
 
-  test('변경 요청에 X-CSRF-Protection: 1이 있으면 통과한다', () => {
+  test('변경 요청에 X-Requested-With: XMLHttpRequest가 있으면 통과한다', () => {
     const next = jest.fn();
 
-    requireCsrfHeader(createRequest('POST', '1'), {} as Response, next);
+    requireCsrfHeader(createRequest('POST', true), {} as Response, next);
 
     expect(next).toHaveBeenCalledWith();
   });

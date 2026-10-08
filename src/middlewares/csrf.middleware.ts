@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from 'express';
 
 import { ForbiddenError } from '../types/errors';
 
-const CSRF_HEADER = 'x-csrf-protection';
 const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
 
 export function requireCsrfHeader(
@@ -10,7 +9,8 @@ export function requireCsrfHeader(
   _res: Response,
   next: NextFunction,
 ): void {
-  if (SAFE_METHODS.includes(req.method) || req.get(CSRF_HEADER) === '1') {
+  // req.xhr: X-Requested-With가 XMLHttpRequest인지 Express가 확인한다.
+  if (SAFE_METHODS.includes(req.method) || req.xhr) {
     next();
     return;
   }

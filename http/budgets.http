@@ -15,7 +15,7 @@
 ### ========================================
 
 POST {{baseUrl}}/auth/signin
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {
@@ -24,7 +24,7 @@ Content-Type: application/json
 }
 
 POST {{baseUrl}}/auth/signin
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {
@@ -33,7 +33,7 @@ Content-Type: application/json
 }
 
 POST {{baseUrl}}/auth/signin
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {
@@ -65,7 +65,7 @@ GET {{baseUrl}}/super-admin/budgets/setting
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -80,7 +80,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -95,7 +95,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -112,7 +112,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -128,7 +128,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -143,7 +143,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -159,7 +159,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -174,7 +174,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -189,7 +189,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -205,7 +205,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -222,7 +222,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
@@ -235,7 +235,7 @@ Cookie: accessToken={{superAdminAccessToken}}
 ### ========================================
 
 PATCH {{baseUrl}}/super-admin/budgets/setting
-X-CSRF-Protection: 1
+X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 Cookie: accessToken={{superAdminAccessToken}}
 
