@@ -18,6 +18,9 @@ import { NotFoundError } from './types/errors';
 
 const app = express();
 
+// Nginx 한 단계만 신뢰해 req.ip를 정한다.
+app.set('trust proxy', 1);
+
 app.use(
   cors({
     origin: process.env.CLIENT_URL,

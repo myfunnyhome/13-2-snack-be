@@ -188,7 +188,9 @@
  *     summary: 로그인
  *     description: >
  *       성공 시 accessToken, refreshToken이 httpOnly 쿠키로 설정됩니다.
- *       IP당 15분에 5회까지 시도할 수 있습니다.
+ *       같은 이메일+IP에서 15분 안에 5회, 같은 이메일에서 15분 안에 10회 로그인에 실패하면
+ *       이후 요청에는 turnstileToken이 필요합니다(Cloudflare Turnstile, action signin).
+ *       같은 IP에서 15분 동안 100회까지 요청할 수 있습니다.
  *     tags: [Auth]
  *     security:
  *       - csrfHeader: []
@@ -208,6 +210,9 @@
  *                 type: string
  *                 format: password
  *                 example: password1234
+ *               turnstileToken:
+ *                 type: string
+ *                 description: TURNSTILE_REQUIRED 응답 이후에만 필요. 한 번만 사용 가능
  *     responses:
  *       200:
  *         description: 로그인 성공 (쿠키 설정됨)
@@ -234,12 +239,20 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *       429:
- *         description: 로그인 시도 횟수 초과
+ *       403:
+ *         description: >
+ *           CSRF 헤더 없음 (CSRF_REJECTED), 반복 실패 후 turnstileToken 누락 (TURNSTILE_REQUIRED),
+ *           Turnstile 검증 실패 (TURNSTILE_FAILED)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/RateLimitResponse'
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: 같은 IP의 로그인 요청 횟수 초과 (TOO_MANY_REQUESTS)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 
 /**
