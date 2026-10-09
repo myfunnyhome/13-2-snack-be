@@ -35,7 +35,7 @@ jobs:
         run: npm run build
 
       - name: 빌드파일 압축하기
-        run: tar -czvf project.tar.gz dist .env package.json package-lock.json
+        run: tar -czvf project.tar.gz dist .env package.json package-lock.json prisma/schema.prisma prisma/migrations prisma7.config.ts
 
       - name: SCP 사용하여 EC2에 빌드파일 전송하기
         uses: appleboy/scp-action@v1
@@ -57,9 +57,15 @@ jobs:
 
             cd /home/ec2-user/snack-backend
 
+            rm -rf prisma/migrations
+
             tar -xvf project.tar.gz
             rm -f project.tar.gz
 
             npm ci
+
+            npx prisma migrate deploy
+
+            rm -rf src
 
             pm2 restart snack-backend
