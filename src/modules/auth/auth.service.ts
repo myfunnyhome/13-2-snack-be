@@ -83,10 +83,6 @@ export async function signupSuperAdmin(
 
   const user = organization.users[0];
 
-  if (!user || user.role !== 'SUPER_ADMIN') {
-    throw new Error('최고관리자 생성에 실패했습니다.');
-  }
-
   return {
     organization: { id: organization.id, name: organization.name },
     user: {
@@ -186,10 +182,6 @@ export async function refresh(
   const user = await authRepository.findUserWithAccountById(userId);
   if (!user?.account?.refreshToken) {
     throw new UnauthorizedError();
-  }
-
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
   }
 
   if (hashRefreshToken(refreshToken) !== user.account.refreshToken) {

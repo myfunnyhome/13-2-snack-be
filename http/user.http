@@ -12,7 +12,6 @@
 
 ### 1. 로그인 - 최고관리자
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "superadmin@snack.com", "password": "Password123!" }
@@ -22,14 +21,12 @@ GET {{baseUrl}}/me
 
 ### 3. 회사명 변경 - 최고관리자 (200 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "organizationName": "스낵컴퍼니2" }
 
 ### 4. 회사명 원복 (200 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "organizationName": "스낵컴퍼니" }
@@ -38,35 +35,30 @@ Content-Type: application/json
 
 ### 5. 변경 항목 없음 (400 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {}
 
 ### 6. 비밀번호 확인 불일치 (400 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "currentPassword": "Password123!", "password": "newpassword123", "passwordConfirm": "wrongpassword" }
 
 ### 7. 비밀번호 8자 미만 (400 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "currentPassword": "Password123!", "password": "short", "passwordConfirm": "short" }
 
 ### 8. 회사명 빈 문자열 (400 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "organizationName": "" }
 
 ### 8-1. 비밀번호 변경 시 currentPassword 누락 (400 / VALIDATION_ERROR 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "password": "newpassword123", "passwordConfirm": "newpassword123" }
@@ -74,7 +66,6 @@ Content-Type: application/json
 ### 8-2. 현재 비밀번호 불일치 (400 / INVALID_CURRENT_PASSWORD 예상)
 # 아무것도 바뀌지 않고 세션도 유지되어야 한다. (회사명도 그대로, 다음 요청 GET /me 200)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {
@@ -91,7 +82,6 @@ GET {{baseUrl}}/me
 
 ### 9. 로그인 - 관리자
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "admin@snack.com", "password": "Password123!" }
@@ -101,14 +91,12 @@ GET {{baseUrl}}/me
 
 ### 11. 관리자가 회사명 변경 시도 (403 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "organizationName": "관리자가바꾼회사명" }
 
 ### 12. 로그인 - 일반 유저
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "user@snack.com", "password": "Password123!" }
@@ -118,7 +106,6 @@ GET {{baseUrl}}/me
 
 ### 14. 일반 유저가 회사명 변경 시도 (403 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "organizationName": "일반유저가바꾼회사명" }
@@ -127,7 +114,6 @@ Content-Type: application/json
 
 ### 15. 로그아웃 후 쿠키 없이 프로필 조회 (401 예상)
 POST {{baseUrl}}/auth/signout
-X-Requested-With: XMLHttpRequest
 
 ###
 GET {{baseUrl}}/me
@@ -136,7 +122,6 @@ GET {{baseUrl}}/me
 
 ### 16. 로그인 - 최고관리자
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "superadmin@snack.com", "password": "Password123!" }
@@ -153,28 +138,24 @@ GET {{baseUrl}}/super-admin/users?keyword=김
 ### 20. 권한 변경 GENERAL to ADMIN (200)
 # id=5(정민수, staff01@snack.com)는 활성 GENERAL 유저임
 PATCH {{baseUrl}}/super-admin/users/5
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "role": "ADMIN" }
 
 ### 21. SUPER_ADMIN으로 변경 시도 (400 예상)
 PATCH {{baseUrl}}/super-admin/users/5
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "role": "SUPER_ADMIN" }
 
 ### 22. 자기 자신 권한 변경 시도 (400 예상)
 PATCH {{baseUrl}}/super-admin/users/1
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "role": "ADMIN" }
 
 ### 23. 없는 회원 (404 예상)
 PATCH {{baseUrl}}/super-admin/users/99999
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "role": "ADMIN" }
@@ -182,25 +163,21 @@ Content-Type: application/json
 ### 24. 이미 비활성인 회원을 대상으로 권한 변경 시도 (400 예상)
 # id=4(inactive@snack.com)는 시드 시점부터 탈퇴 처리된 계정임
 PATCH {{baseUrl}}/super-admin/users/4
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "role": "ADMIN" }
 
 ### 25. 최고관리자 상태에서 일반 회원 탈퇴 (200)
 DELETE {{baseUrl}}/super-admin/users/5
-X-Requested-With: XMLHttpRequest
 
 ### 26. 탈퇴 후 목록에서 사라졌는지 (200)
 GET {{baseUrl}}/super-admin/users
 
 ### 27. 이미 탈퇴한 회원 재탈퇴 시도 (400 예상)
 DELETE {{baseUrl}}/super-admin/users/5
-X-Requested-With: XMLHttpRequest
 
 ### 28. 일반 회원으로 로그인 후 목록 조회 시도 (403 예상)
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "staff10@snack.com", "password": "Password123!" }
@@ -212,21 +189,18 @@ GET {{baseUrl}}/super-admin/users
 
 ### 29. 로그인 - 최고관리자
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "superadmin@snack.com", "password": "Password123!" }
 
 ### 30. 비밀번호 변경 (200 예상)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "currentPassword": "Password123!", "password": "newpassword123", "passwordConfirm": "newpassword123" }
 
 ### 31. 바뀐 비밀번호로 로그인 (200 예상)
 POST {{baseUrl}}/auth/signin
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 { "email": "superadmin@snack.com", "password": "newpassword123" }
@@ -234,7 +208,6 @@ Content-Type: application/json
 ### 32. 회사명 + 비밀번호 동시 변경 (200 예상, 트랜잭션 확인용)
 # 비밀번호를 바꾸면 현재 세션도 무효화되어 이후 요청은 401 TOKEN_REVOKED가 된다. (30번도 동일, 31번에서 재로그인)
 PATCH {{baseUrl}}/me/profile
-X-Requested-With: XMLHttpRequest
 Content-Type: application/json
 
 {

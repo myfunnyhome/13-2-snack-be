@@ -131,8 +131,7 @@
  *       요청 바디에 invitationToken이 있으면 초대 가입, 없으면 최고관리자 가입으로 처리됩니다.
  *       최고관리자 가입에만 rate limit(IP당 1시간 10회)이 적용되고 초대 가입은 제한이 없습니다.
  *     tags: [Auth]
- *     security:
- *       - csrfHeader: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -192,8 +191,7 @@
  *       이후 요청에는 turnstileToken이 필요합니다(Cloudflare Turnstile, action signin).
  *       같은 IP에서 15분 동안 100회까지 요청할 수 있습니다.
  *     tags: [Auth]
- *     security:
- *       - csrfHeader: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -241,7 +239,7 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *       403:
  *         description: >
- *           CSRF 헤더 없음 (CSRF_REJECTED), 반복 실패 후 turnstileToken 누락 (TURNSTILE_REQUIRED),
+ *           반복 실패 후 turnstileToken 누락 (TURNSTILE_REQUIRED),
  *           Turnstile 검증 실패 (TURNSTILE_FAILED)
  *         content:
  *           application/json:
@@ -263,12 +261,11 @@
  *     description: >
  *       refreshToken 쿠키를 검증하고 새 accessToken, refreshToken을 발급합니다.
  *       accessToken 없이 refreshToken 쿠키만으로 동작합니다.
- *       무효화된 토큰(TOKEN_REVOKED)이거나 저장된 토큰과 일치하지 않으면 accessToken, refreshToken 쿠키가 삭제됩니다.
- *       토큰 없음, 위조, 만료처럼 인증 미들웨어에서 거부된 경우에는 쿠키가 삭제되지 않습니다.
+ *       refreshToken 쿠키가 없는 경우를 제외하고, 위조·만료·무효화·저장된 토큰과 불일치로 거부되면
+ *       accessToken, refreshToken 쿠키가 삭제됩니다.
  *     tags: [Auth]
  *     security:
  *       - refreshCookieAuth: []
- *         csrfHeader: []
  *     responses:
  *       200:
  *         description: 재발급 성공 (쿠키 갱신됨)
@@ -287,8 +284,9 @@
  *                   example: true
  *       401:
  *         description: >
- *           refreshToken 없음, 위조, 불일치 (UNAUTHORIZED),
- *           refreshToken 만료 (SESSION_EXPIRED),
+ *           refreshToken 없음 (UNAUTHORIZED, 쿠키 유지),
+ *           위조·불일치 (UNAUTHORIZED, 쿠키 삭제),
+ *           refreshToken 만료 (SESSION_EXPIRED, 쿠키 삭제),
  *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
@@ -328,8 +326,7 @@
  *       계정 존재 여부와 상관없이 항상 같은 응답을 반환합니다.
  *       IP당 1시간에 5회까지 요청할 수 있습니다.
  *     tags: [Auth]
- *     security:
- *       - csrfHeader: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:
@@ -370,8 +367,7 @@
  *       메일로 받은 토큰으로 새 비밀번호를 설정합니다.
  *       성공 시 기존 세션이 모두 무효화되고(TOKEN_REVOKED), 같은 재설정 토큰은 다시 쓸 수 없습니다.
  *     tags: [Auth]
- *     security:
- *       - csrfHeader: []
+ *     security: []
  *     requestBody:
  *       required: true
  *       content:

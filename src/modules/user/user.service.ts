@@ -3,7 +3,6 @@ import {
   BadRequestError,
   ForbiddenError,
   NotFoundError,
-  UnauthorizedError,
 } from '../../types/errors';
 import { createPasswordHash, isPasswordMatched } from '../../utils/password';
 import * as userRepository from './user.repository';
@@ -125,10 +124,6 @@ export async function getProfile(userId: number): Promise<MeProfile> {
     throw new NotFoundError('사용자를 찾을 수 없습니다.');
   }
 
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
-  }
-
   return {
     name: user.name,
     email: user.email,
@@ -153,10 +148,6 @@ export async function updateProfile({
 
   if (!current) {
     throw new NotFoundError('사용자를 찾을 수 없습니다.');
-  }
-
-  if (!current.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
   }
 
   if (organizationName !== undefined && role !== 'SUPER_ADMIN') {

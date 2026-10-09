@@ -4,7 +4,6 @@ import express, { NextFunction, Request, Response } from 'express';
 import swaggerUi from 'swagger-ui-express';
 
 import swaggerSpec from './config/swagger';
-import { requireCsrfHeader } from './middlewares/csrf.middleware';
 import errorHandler from './middlewares/errorHandler';
 import adminRoutes from './routes/admin';
 import authRoutes from './routes/auth.route';
@@ -15,6 +14,11 @@ import ordersRoutes from './routes/orders.route';
 import productsRoutes from './routes/products.route';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
+
+// CORS, 메일 링크, Turnstile hostname 검증이 모두 이 값을 쓴다.
+if (!process.env.CLIENT_URL) {
+  throw new Error('CLIENT_URL 환경변수가 필요합니다.');
+}
 
 const app = express();
 
@@ -29,7 +33,6 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-app.use(requireCsrfHeader);
 
 // 라우터 등록은 여기 (도메인 라우터가 추가되면 이 위치에)
 app.use('/auth', authRoutes);

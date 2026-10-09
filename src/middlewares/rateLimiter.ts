@@ -33,7 +33,6 @@ const signinFailureOptions = {
 export const signinEmailIpLimiter = rateLimit({
   ...signinFailureOptions,
   limit: 5,
-  requestPropertyName: 'signinEmailIpLimit',
   keyGenerator: (req) =>
     `${getSigninEmail(req)}:${ipKeyGenerator(req.ip ?? '')}`,
 });
@@ -41,7 +40,6 @@ export const signinEmailIpLimiter = rateLimit({
 export const signinEmailLimiter = rateLimit({
   ...signinFailureOptions,
   limit: 10,
-  requestPropertyName: 'signinEmailLimit',
   keyGenerator: getSigninEmail,
 });
 

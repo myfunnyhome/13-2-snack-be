@@ -15,9 +15,7 @@ const options: swaggerJSDoc.Options = {
       title: '간식대장(SNACK) API',
       version: '1.0.0',
       description:
-        '여러 플랫폼에서 구매하는 간식을 한 곳에서 관리하는 구매 요청·승인 서비스 API.\n\n' +
-        '변경 요청(POST/PATCH/DELETE)에는 X-Requested-With: XMLHttpRequest 헤더가 필요합니다. ' +
-        'Swagger에서는 Authorize의 csrfHeader에 XMLHttpRequest를 입력하세요.',
+        '여러 플랫폼에서 구매하는 간식을 한 곳에서 관리하는 구매 요청·승인 서비스 API',
     },
     servers: [
       {
@@ -26,7 +24,7 @@ const options: swaggerJSDoc.Options = {
           `http://localhost:${process.env.PORT ?? 3000}`,
       },
     ],
-    security: [{ cookieAuth: [], csrfHeader: [] }],
+    security: [{ cookieAuth: [] }],
     components: {
       securitySchemes: {
         cookieAuth: {
@@ -40,13 +38,6 @@ const options: swaggerJSDoc.Options = {
           in: 'cookie',
           name: 'refreshToken',
           description: '로그인 시 HttpOnly 쿠키로 발급되는 refreshToken',
-        },
-        csrfHeader: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'X-Requested-With',
-          description:
-            '변경 요청(POST/PATCH/DELETE)에 필수. 값은 XMLHttpRequest',
         },
       },
       schemas: {
@@ -101,8 +92,7 @@ const options: swaggerJSDoc.Options = {
           content: errorContent,
         },
         Forbidden: {
-          description:
-            '접근 권한 없음 (FORBIDDEN), CSRF 헤더 없음 (CSRF_REJECTED)',
+          description: '접근 권한 없음 (FORBIDDEN)',
           content: errorContent,
         },
         NotFound: {
