@@ -64,12 +64,13 @@ Content-Type: application/json
   "bizRegNumber": "555-44-33322"
 }
 
-### 7. 잘못된 비밀번호 로그인 (401 예상)
+### 7. 존재하지 않는 계정 로그인 (401 / UNAUTHORIZED 예상)
+# 시드에 없는 계정. 계정 존재 여부가 드러나지 않도록 10번(비활성 계정)과 같은 응답이 와야 한다.
 POST {{baseUrl}}/auth/signin
 Content-Type: application/json
 
 {
-  "email": "admin@snack.com",
+  "email": "admin1@snack.com",
   "password": "wrongpassword"
 }
 
@@ -81,8 +82,9 @@ Content-Type: application/json
 POST {{baseUrl}}/auth/signout
 Content-Type: application/json
 
-### 10. 비활성 계정 로그인 (401 / ACCOUNT_INACTIVE 예상)
-# 준비: DB에서 inactive@snack.com의 isActive를 false로 변경 후 실행
+### 10. 비활성 계정 로그인 (401 / UNAUTHORIZED 예상)
+# 시드의 inactive@snack.com은 isActive가 false인 계정이다.
+# 비밀번호가 맞아도 계정 상태가 드러나지 않도록 7번(존재하지 않는 계정)과 같은 응답이 와야 한다.
 POST {{baseUrl}}/auth/signin
 Content-Type: application/json
 
@@ -183,11 +185,24 @@ Content-Type: application/json
 
 ### --- Rate Limit ---
 
-### 19. 로그인 rate limit (연속 6회 요청, 6번째 429 예상)
+### 19. 로그인 반복 실패 (연속 6회 요청, 1~5번째 401, 6번째 403 TURNSTILE_REQUIRED 예상)
+# 같은 이메일+IP에서 비밀번호 실패 5회 이후에는 turnstileToken이 필요하다.
 POST {{baseUrl}}/auth/signin
 Content-Type: application/json
 
 { "email": "user@snack.com", "password": "wrongpassword" }
+
+### 19-1. 반복 실패 후 Turnstile 토큰과 함께 로그인 (200 예상)
+# 로컬에서는 TURNSTILE_SECRET_KEY를 테스트 키 1x0000000000000000000000000000000AA로 둔다.
+# 테스트 키는 어떤 토큰이든 통과시킨다. 2x...AA로 바꾸면 403 TURNSTILE_FAILED가 와야 한다.
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "user@snack.com",
+  "password": "Password123!",
+  "turnstileToken": "XXXX.DUMMY.TOKEN.XXXX"
+}
 
 ### 20. 재설정 요청 rate limit (연속 6회 요청, 6번째 429 예상)
 POST {{baseUrl}}/auth/password-reset

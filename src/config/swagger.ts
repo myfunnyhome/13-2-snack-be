@@ -24,7 +24,6 @@ const options: swaggerJSDoc.Options = {
           `http://localhost:${process.env.PORT ?? 3000}`,
       },
     ],
-    // 기본은 accessToken 쿠키 인증. 인증이 필요 없는 엔드포인트는 문서에서 security: [] 로 덮어쓴다.
     security: [{ cookieAuth: [] }],
     components: {
       securitySchemes: {
@@ -89,7 +88,7 @@ const options: swaggerJSDoc.Options = {
         },
         Unauthorized: {
           description:
-            '인증 실패 (UNAUTHORIZED) 또는 accessToken 만료 (TOKEN_EXPIRED)',
+            '인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED), 무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)',
           content: errorContent,
         },
         Forbidden: {

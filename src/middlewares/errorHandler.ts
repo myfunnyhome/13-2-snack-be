@@ -3,7 +3,7 @@ import { UnauthorizedError as ExpressJwtUnauthorizedError } from 'express-jwt';
 import { ZodError } from 'zod';
 
 import { Prisma } from '../generated/prisma/client';
-// import { clearCookieOptions } from '../modules/auth/auth.controller'; 추가 필요한데 추가해도 되는지?
+import { clearCookieOptions } from '../modules/auth/auth.controller';
 import { AppError } from '../types/errors';
 
 /*
@@ -41,6 +41,24 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       err.inner instanceof Error && err.inner.name === 'TokenExpiredError';
     const isRefreshRequest = req.path === '/auth/refresh-token';
 
+    // 쿠키가 없거나 access 만료(refresh로 복구 가능)가 아니면 다시 쓸 수 없는 토큰이므로 지운다.
+    if (
+      err.code !== 'credentials_required' &&
+      !(isTokenExpired && !isRefreshRequest)
+    ) {
+      res
+        .clearCookie('accessToken', clearCookieOptions)
+        .clearCookie('refreshToken', clearCookieOptions);
+    }
+
+    if (err.code === 'revoked_token') {
+      return res.status(401).json({
+        success: false,
+        message: '인증 정보가 변경되었습니다. 다시 로그인해주세요.',
+        code: 'TOKEN_REVOKED',
+      });
+    }
+
     const message = !isTokenExpired
       ? '로그인이 필요합니다.'
       : isRefreshRequest
@@ -52,11 +70,6 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
       : isRefreshRequest
         ? 'SESSION_EXPIRED'
         : 'TOKEN_EXPIRED';
-
-    // if (isRefreshRequest) { 추가 필요한데 추가해도 되는지?
-    //   res.clearCookie('accessToken', clearCookieOptions);
-    //   res.clearCookie('refreshToken', clearCookieOptions);
-    // }
 
     return res.status(401).json({
       success: false,
