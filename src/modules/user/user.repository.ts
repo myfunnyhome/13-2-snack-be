@@ -109,10 +109,17 @@ export function findTargetById(userId: number): Promise<FindTargetResult> {
 }
 
 export function updateRole(userId: number, role: Role): Promise<UserListItem> {
-  return prisma.user.update({
-    where: { id: userId },
-    data: { role },
-    select: userListArgs.select,
+  return prisma.$transaction(async (tx) => {
+    await tx.account.updateMany({
+      where: { userId },
+      data: { refreshToken: null },
+    });
+
+    return await tx.user.update({
+      where: { id: userId },
+      data: { role, tokenVersion: { increment: 1 } },
+      select: userListArgs.select,
+    });
   });
 }
 
@@ -125,7 +132,7 @@ export function deactivate(userId: number): Promise<UserListItem> {
 
     return await tx.user.update({
       where: { id: userId },
-      data: { isActive: false },
+      data: { isActive: false, tokenVersion: { increment: 1 } },
       select: userListArgs.select,
     });
   });
@@ -140,6 +147,13 @@ export function findProfileById(
   });
 }
 
+export function findPasswordHashById(userId: number) {
+  return prisma.account.findUnique({
+    where: { userId },
+    select: { password: true },
+  });
+}
+
 export function updateProfile({
   userId,
   organizationId,
@@ -150,7 +164,11 @@ export function updateProfile({
     if (passwordHash !== undefined) {
       await tx.account.update({
         where: { userId },
-        data: { password: passwordHash },
+        data: { password: passwordHash, refreshToken: null },
+      });
+      await tx.user.update({
+        where: { id: userId },
+        data: { tokenVersion: { increment: 1 } },
       });
     }
 

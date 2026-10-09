@@ -1,13 +1,31 @@
 import type { NextFunction, Request, Response } from 'express';
-import { expressjwt } from 'express-jwt';
+import { type IsRevoked, expressjwt } from 'express-jwt';
 
 import { Role } from '../generated/prisma/client';
+import { findTokenOwnerStatus } from '../modules/auth/auth.repository';
 import { ForbiddenError, UnauthorizedError } from '../types/errors';
+import { isTokenRevoked } from '../utils/authToken';
+
+const checkTokenRevoked: IsRevoked = async (_req, token) => {
+  const payload = token?.payload;
+
+  if (!payload || typeof payload === 'string') {
+    return true;
+  }
+
+  const owner =
+    typeof payload.userId === 'number'
+      ? await findTokenOwnerStatus(payload.userId)
+      : null;
+
+  return isTokenRevoked(payload.tokenVersion, owner);
+};
 
 const verifyAccessTokenSignature = expressjwt({
   secret: process.env.JWT_ACCESS_SECRET!,
   algorithms: ['HS256'],
   getToken: (req) => req.cookies.accessToken,
+  isRevoked: checkTokenRevoked,
 });
 
 // 서명/시크릿 검증만으로는 access와 refresh 토큰을 구분하지 못하는 상황
@@ -30,6 +48,7 @@ const verifyRefreshTokenSignature = expressjwt({
   secret: process.env.JWT_REFRESH_SECRET!,
   algorithms: ['HS256'],
   getToken: (req) => req.cookies.refreshToken,
+  isRevoked: checkTokenRevoked,
 });
 
 function checkRefreshTokenType(

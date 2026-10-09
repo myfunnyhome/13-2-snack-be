@@ -30,6 +30,7 @@ const findUserWithAccountByEmailArgs = {
     email: true,
     role: true,
     isActive: true,
+    tokenVersion: true,
     organizationId: true,
     account: {
       select: {
@@ -93,6 +94,7 @@ const findUserWithAccountByIdArgs = {
     id: true,
     role: true,
     isActive: true,
+    tokenVersion: true,
     organizationId: true,
     account: {
       select: {
@@ -200,6 +202,13 @@ export function findUserWithAccountById(
   });
 }
 
+export function findTokenOwnerStatus(userId: number) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { isActive: true, tokenVersion: true },
+  });
+}
+
 export function createUserWithInvitation({
   invitationToken,
   name,
@@ -303,8 +312,9 @@ export function resetPassword(
       },
     });
 
-    return tx.user.findUnique({
+    return tx.user.update({
       where: { id: account.userId },
+      data: { tokenVersion: { increment: 1 } },
       select: findUserByResetTokenArgs.select,
     });
   });

@@ -85,7 +85,9 @@
  *                     data:
  *                       $ref: '#/components/schemas/UserProfile'
  *       401:
- *         description: 인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED), 비활성화된 계정 (ACCOUNT_INACTIVE)
+ *         description: >
+ *           인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED),
+ *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
  *             schema:
@@ -102,6 +104,8 @@
  *     description: |
  *       비밀번호와 회사명을 수정합니다. 보낸 항목만 수정되고 둘 중 하나는 반드시 보내야 합니다.
  *       회사명은 SUPER_ADMIN만 수정할 수 있습니다.
+ *       비밀번호를 변경할 때는 currentPassword가 필수이며, 틀리면 400(INVALID_CURRENT_PASSWORD)이고 아무것도 변경되지 않습니다.
+ *       변경에 성공하면 현재 세션을 포함한 기존 세션이 모두 무효화되어(TOKEN_REVOKED) 다시 로그인해야 합니다.
  *     tags: [User]
  *     requestBody:
  *       required: true
@@ -126,6 +130,11 @@
  *                 format: password
  *                 example: newpassword1234
  *                 description: password를 보낼 때 일치해야 함
+ *               currentPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: Password123!
+ *                 description: password를 보낼 때 필수. 현재 비밀번호
  *     responses:
  *       200:
  *         description: 수정 성공 (수정된 내 정보)
@@ -139,13 +148,17 @@
  *                     data:
  *                       $ref: '#/components/schemas/UserProfile'
  *       400:
- *         description: 유효성 검사 실패 (VALIDATION_ERROR), 변경할 항목이 없음 (BAD_REQUEST)
+ *         description: >
+ *           유효성 검사 실패 (VALIDATION_ERROR, currentPassword 누락 포함),
+ *           변경할 항목이 없음 (BAD_REQUEST), 현재 비밀번호 불일치 (INVALID_CURRENT_PASSWORD)
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: 인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED), 비활성화된 계정 (ACCOUNT_INACTIVE)
+ *         description: >
+ *           인증 실패 (UNAUTHORIZED), accessToken 만료 (TOKEN_EXPIRED),
+ *           무효화된 토큰 (TOKEN_REVOKED, 쿠키 삭제)
  *         content:
  *           application/json:
  *             schema:
@@ -213,7 +226,9 @@
  * /super-admin/users/{id}:
  *   patch:
  *     summary: 회원 권한 변경
- *     description: SUPER_ADMIN만 호출할 수 있습니다. 같은 조직의 회원 권한을 GENERAL 또는 ADMIN으로 바꿉니다.
+ *     description: |
+ *       SUPER_ADMIN만 호출할 수 있습니다. 같은 조직의 회원 권한을 GENERAL 또는 ADMIN으로 바꿉니다.
+ *       대상 회원의 기존 세션은 즉시 무효화됩니다(TOKEN_REVOKED).
  *     tags: [User]
  *     parameters:
  *       - in: path
@@ -269,7 +284,7 @@
  *     summary: 회원 탈퇴 처리
  *     description: |
  *       SUPER_ADMIN만 호출할 수 있습니다.
- *       회원을 비활성화(소프트 삭제)하고 로그인 세션(refreshToken)을 무효화합니다. 데이터는 삭제되지 않습니다.
+ *       회원을 비활성화(소프트 삭제)하고 기존 세션을 즉시 무효화합니다(TOKEN_REVOKED). 데이터는 삭제되지 않습니다.
  *     tags: [User]
  *     parameters:
  *       - in: path

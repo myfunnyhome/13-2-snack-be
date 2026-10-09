@@ -11,7 +11,11 @@ import {
   hashRefreshToken,
 } from '../../utils/authToken';
 import { sendPasswordResetEmail } from '../../utils/mailer';
-import { createPasswordHash, isPasswordMatched } from '../../utils/password';
+import {
+  DUMMY_PASSWORD_HASH,
+  createPasswordHash,
+  isPasswordMatched,
+} from '../../utils/password';
 import { generateToken, hashToken } from '../../utils/token';
 import * as invitationService from '../invitation/invitation.service';
 import * as authRepository from './auth.repository';
@@ -79,10 +83,6 @@ export async function signupSuperAdmin(
 
   const user = organization.users[0];
 
-  if (!user || user.role !== 'SUPER_ADMIN') {
-    throw new Error('최고관리자 생성에 실패했습니다.');
-  }
-
   return {
     organization: { id: organization.id, name: organization.name },
     user: {
@@ -140,26 +140,20 @@ export async function signupWithInvitation(
 export async function signin(data: SigninInput): Promise<SigninResult> {
   const user = await authRepository.findUserWithAccountByEmail(data.email);
 
-  if (!user?.account) {
-    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
-  }
-
   const isMatched = await isPasswordMatched(
     data.password,
-    user.account.password,
+    user?.account?.password ?? DUMMY_PASSWORD_HASH,
   );
-  if (!isMatched) {
-    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
-  }
 
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
+  if (!user?.account || !isMatched || !user.isActive) {
+    throw new UnauthorizedError('이메일 또는 비밀번호가 일치하지 않습니다.');
   }
 
   const tokenPayload: TokenPayload = {
     userId: user.id,
     organizationId: user.organizationId,
     role: user.role,
+    tokenVersion: user.tokenVersion,
   };
 
   const accessToken = createAccessToken(tokenPayload);
@@ -190,10 +184,6 @@ export async function refresh(
     throw new UnauthorizedError();
   }
 
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
-  }
-
   if (hashRefreshToken(refreshToken) !== user.account.refreshToken) {
     throw new UnauthorizedError();
   }
@@ -202,6 +192,7 @@ export async function refresh(
     userId: user.id,
     role: user.role,
     organizationId: user.organizationId,
+    tokenVersion: user.tokenVersion,
   };
 
   const newAccessToken = createAccessToken(tokenPayload);

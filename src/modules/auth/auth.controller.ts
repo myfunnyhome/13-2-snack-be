@@ -12,27 +12,16 @@ import * as authService from './auth.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-const accessCookieOptions: CookieOptions = {
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax',
-  maxAge: ms((process.env.JWT_REFRESH_EXPIRES_IN ?? '3d') as StringValue),
-  path: '/',
-};
-
-const refreshCookieOptions: CookieOptions = {
-  httpOnly: true,
-  secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax',
-  maxAge: ms((process.env.JWT_REFRESH_EXPIRES_IN ?? '3d') as StringValue),
-  path: '/',
-};
-
 export const clearCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: isProduction ? 'none' : 'lax',
+  sameSite: 'lax',
   path: '/',
+};
+
+const authCookieOptions: CookieOptions = {
+  ...clearCookieOptions,
+  maxAge: ms((process.env.JWT_REFRESH_EXPIRES_IN ?? '3d') as StringValue),
 };
 
 export async function signup(req: Request, res: Response): Promise<void> {
@@ -59,8 +48,8 @@ export async function signin(req: Request, res: Response): Promise<void> {
   const { user, accessToken, refreshToken } = await authService.signin(data);
 
   res
-    .cookie('accessToken', accessToken, accessCookieOptions)
-    .cookie('refreshToken', refreshToken, refreshCookieOptions)
+    .cookie('accessToken', accessToken, authCookieOptions)
+    .cookie('refreshToken', refreshToken, authCookieOptions)
     .status(200)
     .json({
       success: true,
@@ -76,8 +65,8 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     );
 
     res
-      .cookie('accessToken', accessToken, accessCookieOptions)
-      .cookie('refreshToken', refreshToken, refreshCookieOptions)
+      .cookie('accessToken', accessToken, authCookieOptions)
+      .cookie('refreshToken', refreshToken, authCookieOptions)
       .status(200)
       .json({ success: true });
   } catch (error) {

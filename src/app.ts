@@ -15,7 +15,15 @@ import productsRoutes from './routes/products.route';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
 
+// CORS, 메일 링크, Turnstile hostname 검증이 모두 이 값을 쓴다.
+if (!process.env.CLIENT_URL) {
+  throw new Error('CLIENT_URL 환경변수가 필요합니다.');
+}
+
 const app = express();
+
+// Nginx 한 단계만 신뢰해 req.ip를 정한다.
+app.set('trust proxy', 1);
 
 app.use(
   cors({

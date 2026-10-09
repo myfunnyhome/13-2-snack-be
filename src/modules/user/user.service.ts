@@ -3,9 +3,8 @@ import {
   BadRequestError,
   ForbiddenError,
   NotFoundError,
-  UnauthorizedError,
 } from '../../types/errors';
-import { createPasswordHash } from '../../utils/password';
+import { createPasswordHash, isPasswordMatched } from '../../utils/password';
 import * as userRepository from './user.repository';
 import type { UserListItem } from './user.repository';
 import type {
@@ -125,10 +124,6 @@ export async function getProfile(userId: number): Promise<MeProfile> {
     throw new NotFoundError('사용자를 찾을 수 없습니다.');
   }
 
-  if (!user.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
-  }
-
   return {
     name: user.name,
     email: user.email,
@@ -142,6 +137,7 @@ export async function updateProfile({
   role,
   organizationId,
   password,
+  currentPassword,
   organizationName,
 }: UpdateProfileParams): Promise<MeProfile> {
   if (password === undefined && organizationName === undefined) {
@@ -154,16 +150,28 @@ export async function updateProfile({
     throw new NotFoundError('사용자를 찾을 수 없습니다.');
   }
 
-  if (!current.isActive) {
-    throw new UnauthorizedError('비활성화된 계정입니다.', 'ACCOUNT_INACTIVE');
-  }
-
   if (organizationName !== undefined && role !== 'SUPER_ADMIN') {
     throw new ForbiddenError('회사명은 최고관리자만 변경할 수 있습니다.');
   }
 
-  const passwordHash =
-    password === undefined ? undefined : await createPasswordHash(password);
+  let passwordHash: string | undefined;
+
+  if (password !== undefined) {
+    const account = await userRepository.findPasswordHashById(userId);
+    const isMatched =
+      account !== null &&
+      currentPassword !== undefined &&
+      (await isPasswordMatched(currentPassword, account.password));
+
+    if (!isMatched) {
+      throw new BadRequestError(
+        '현재 비밀번호가 일치하지 않습니다.',
+        'INVALID_CURRENT_PASSWORD',
+      );
+    }
+
+    passwordHash = await createPasswordHash(password);
+  }
 
   const user = await userRepository.updateProfile({
     userId,

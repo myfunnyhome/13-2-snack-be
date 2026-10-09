@@ -10,7 +10,24 @@ export type TokenPayload = {
   userId: number;
   organizationId: number;
   role: Role;
+  tokenVersion: number;
 };
+
+type TokenOwnerStatus = {
+  isActive: boolean;
+  tokenVersion: number;
+};
+
+export function isTokenRevoked(
+  tokenVersion: unknown,
+  owner: TokenOwnerStatus | null,
+): boolean {
+  if (typeof tokenVersion !== 'number' || !owner) {
+    return true;
+  }
+
+  return !owner.isActive || owner.tokenVersion !== tokenVersion;
+}
 
 function getTokenSecret(type: TokenType): string {
   const secret =
