@@ -7,8 +7,18 @@ const SITEVERIFY_URL =
 const SITEVERIFY_TIMEOUT_MS = 5000;
 const TOKEN_MAX_LENGTH = 2048;
 
+type SiteverifyErrorCode =
+  | 'missing-input-secret'
+  | 'invalid-input-secret'
+  | 'missing-input-response'
+  | 'invalid-input-response'
+  | 'bad-request'
+  | 'timeout-or-duplicate'
+  | 'internal-error';
+
 type SiteverifyResult = {
   success: boolean;
+  'error-codes': SiteverifyErrorCode[];
   hostname?: string;
   action?: string;
   metadata?: { result_with_testing_key?: boolean };
@@ -25,16 +35,39 @@ async function isTurnstileTokenValid(token: string): Promise<boolean> {
       }),
       signal: AbortSignal.timeout(SITEVERIFY_TIMEOUT_MS),
     });
+
+    if (!response.ok) {
+      console.warn('Turnstile siteverify HTTP error:', response.status);
+      return false;
+    }
+
     const result = (await response.json()) as SiteverifyResult;
 
-    if (!result.success) return false;
+    if (!result.success) {
+      console.warn('Turnstile siteverify rejected:', result['error-codes']);
+      return false;
+    }
 
-    if (result.metadata?.result_with_testing_key) return true;
+    if (
+      process.env.NODE_ENV !== 'production' &&
+      result.metadata?.result_with_testing_key
+    ) {
+      return true;
+    }
 
-    return (
-      result.hostname === new URL(process.env.CLIENT_URL ?? '').hostname &&
-      result.action === 'signin'
-    );
+    const hostnameMatch =
+      result.hostname === new URL(process.env.CLIENT_URL ?? '').hostname;
+    const actionMatch = result.action === 'signin';
+
+    if (!hostnameMatch || !actionMatch) {
+      console.warn('Turnstile siteverify mismatch:', {
+        hostnameMatch,
+        actionMatch,
+      });
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Turnstile siteverify failed:', error);
     return false;
@@ -46,18 +79,18 @@ export async function requireTurnstileIfFlagged(
   res: Response,
   next: NextFunction,
 ): Promise<void> {
-  if (!res.locals.turnstileRequired) {
-    next();
-    return;
-  }
-
   const token: unknown = req.body?.turnstileToken;
 
   if (typeof token !== 'string' || token.length === 0) {
-    throw new ForbiddenError(
-      '보안 확인이 필요합니다. 확인을 완료한 뒤 다시 로그인해주세요.',
-      'TURNSTILE_REQUIRED',
-    );
+    if (res.locals.turnstileRequired) {
+      throw new ForbiddenError(
+        '보안 확인이 필요합니다. 확인을 완료한 뒤 다시 로그인해주세요.',
+        'TURNSTILE_REQUIRED',
+      );
+    }
+
+    next();
+    return;
   }
 
   if (
