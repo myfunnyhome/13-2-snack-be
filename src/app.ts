@@ -12,6 +12,7 @@ import invitationsRoutes from './routes/invitations.route';
 import meRoutes from './routes/me';
 import ordersRoutes from './routes/orders.route';
 import productsRoutes from './routes/products.route';
+import snackyRoutes from './routes/snacky.route';
 import superAdminRoutes from './routes/super-admin';
 import { NotFoundError } from './types/errors';
 
@@ -43,6 +44,7 @@ app.use('/products', productsRoutes);
 app.use('/me', meRoutes);
 app.use('/admin', adminRoutes);
 app.use('/super-admin', superAdminRoutes);
+app.use('/snacky', snackyRoutes);
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
