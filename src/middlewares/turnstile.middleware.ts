@@ -7,18 +7,9 @@ const SITEVERIFY_URL =
 const SITEVERIFY_TIMEOUT_MS = 5000;
 const TOKEN_MAX_LENGTH = 2048;
 
-type SiteverifyErrorCode =
-  | 'missing-input-secret'
-  | 'invalid-input-secret'
-  | 'missing-input-response'
-  | 'invalid-input-response'
-  | 'bad-request'
-  | 'timeout-or-duplicate'
-  | 'internal-error';
-
 type SiteverifyResult = {
   success: boolean;
-  'error-codes': SiteverifyErrorCode[];
+  'error-codes': string[];
   hostname?: string;
   action?: string;
   metadata?: { result_with_testing_key?: boolean };
@@ -35,11 +26,6 @@ async function isTurnstileTokenValid(token: string): Promise<boolean> {
       }),
       signal: AbortSignal.timeout(SITEVERIFY_TIMEOUT_MS),
     });
-
-    if (!response.ok) {
-      console.warn('Turnstile siteverify HTTP error:', response.status);
-      return false;
-    }
 
     const result = (await response.json()) as SiteverifyResult;
 

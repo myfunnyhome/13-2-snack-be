@@ -6,11 +6,13 @@ import {
 } from '../middlewares/auth.middleware';
 import {
   passwordResetLimiter,
-  signinEmailIpLimiter,
-  signinEmailLimiter,
   signinIpLimiter,
   signupRateLimit,
 } from '../middlewares/rateLimiter';
+import {
+  signinEmailIpLimiter,
+  signinEmailLimiter,
+} from '../middlewares/signinTurnstileLimiter';
 import { requireTurnstileIfFlagged } from '../middlewares/turnstile.middleware';
 import * as authController from '../modules/auth/auth.controller';
 
