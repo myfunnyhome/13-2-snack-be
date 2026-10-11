@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import rateLimit from 'express-rate-limit';
 
 export const signinIpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -9,38 +9,6 @@ export const signinIpLimiter = rateLimit({
     message: '로그인 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
     code: 'TOO_MANY_REQUESTS',
   },
-});
-
-function getSigninEmail(req: Request): string {
-  return String(req.body?.email ?? '')
-    .trim()
-    .toLowerCase();
-}
-
-const signinFailureOptions = {
-  windowMs: 15 * 60 * 1000,
-  skipSuccessfulRequests: true,
-  requestWasSuccessful: (_req: Request, res: Response) =>
-    res.statusCode !== 401,
-  handler: (_req: Request, res: Response, next: NextFunction) => {
-    res.locals.turnstileRequired = true;
-    next();
-  },
-  standardHeaders: false,
-  legacyHeaders: false,
-};
-
-export const signinEmailIpLimiter = rateLimit({
-  ...signinFailureOptions,
-  limit: 5,
-  keyGenerator: (req) =>
-    `${getSigninEmail(req)}:${ipKeyGenerator(req.ip ?? '')}`,
-});
-
-export const signinEmailLimiter = rateLimit({
-  ...signinFailureOptions,
-  limit: 10,
-  keyGenerator: getSigninEmail,
 });
 
 // 최고관리자 최초 가입(공개 가입) 남용 방어용.

@@ -1,0 +1,47 @@
+@baseUrl = http://localhost:3001
+
+### 시드 계정 (비밀번호 모두 Password123!)
+# user@snack.com  GENERAL
+# Snacky는 로그인 사용자별 10분당 10회까지 호출할 수 있다. 질문마다 Gemini API를 호출한다.
+
+### --- 로그인 ---
+
+### 1. GENERAL 로그인
+POST {{baseUrl}}/auth/signin
+Content-Type: application/json
+
+{
+  "email": "user@snack.com",
+  "password": "Password123!"
+}
+
+### --- 질문 ---
+
+### 2. Snacky 질문 (200 예상)
+POST {{baseUrl}}/snacky/answers
+Content-Type: application/json
+
+{
+  "question": "구매 요청은 어떻게 하나요?"
+}
+
+### 3. 빈 질문 (400 / VALIDATION_ERROR 예상)
+POST {{baseUrl}}/snacky/answers
+Content-Type: application/json
+
+{
+  "question": "   "
+}
+
+### --- 인증 ---
+
+### 4. 로그아웃
+POST {{baseUrl}}/auth/signout
+
+### 5. 쿠키 없이 질문 (401 예상)
+POST {{baseUrl}}/snacky/answers
+Content-Type: application/json
+
+{
+  "question": "구매 요청은 어떻게 하나요?"
+}
