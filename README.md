@@ -43,12 +43,12 @@
 ## 📱 기능 구현 영상
 
 <p align="center">
-  <a href="https://youtu.be/bOVqdiB5-zQ">
-    <img src="https://img.youtube.com/vi/bOVqdiB5-zQ/maxresdefault.jpg" alt="SNACK 기능 구현 영상" width="100%" />
+  <a href="https://youtu.be/3YyQgJK7PrI">
+    <img src="https://img.youtube.com/vi/3YyQgJK7PrI/maxresdefault.jpg" alt="SNACK 기능 구현 영상" width="100%" />
   </a>
 </p>
 
-> 이미지를 클릭하면 유튜브에서 영상이 재생됩니다. ([바로가기](https://youtu.be/bOVqdiB5-zQ))
+> 이미지를 클릭하면 유튜브에서 영상이 재생됩니다. ([바로가기](https://youtu.be/3YyQgJK7PrI))
 
 <br/>
 
