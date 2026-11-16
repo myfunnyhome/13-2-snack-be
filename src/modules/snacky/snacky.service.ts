@@ -13,8 +13,12 @@ import {
 
 const QUERY_PREFIX = 'task: search result | query: ';
 const ANSWER_MODEL = 'gemini-3.5-flash-lite';
-const ANSWER_INSTRUCTION =
-  '[근거]에 있는 내용만으로 짧고 핵심만 답한다. 근거에 없는 내용은 만들지 말고, 근거로 답할 수 없으면 "Snacky는 SNACK 서비스 이용 안내를 도와드려요. 이 질문은 답변 범위를 벗어났어요."라고 답한다.';
+const ANSWER_INSTRUCTION = [
+  '너는 SNACK(간식대장) 서비스의 AI 도우미 Snacky다. 친절하고 짧게 답한다.',
+  '인사, 이름, 자기소개처럼 가벼운 대화는 [근거] 없이 한두 문장으로 답한다.',
+  'SNACK 서비스 이용 방법, 규칙, 금액 등 사실은 반드시 [근거]에 있는 내용만으로 답하고, 근거에 없는 내용은 만들지 않는다.',
+  '서비스와 무관하거나 [근거]로 답할 수 없는 질문은 "Snacky는 SNACK 서비스 이용 안내를 도와드려요. 이 질문은 답변 범위를 벗어났어요."라고 답한다.',
+].join(' ');
 const ANSWER_SCHEMA = {
   type: 'object',
   properties: {
